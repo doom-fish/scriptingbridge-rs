@@ -1,25 +1,27 @@
 # scriptingbridge-rs
 
-Safe Rust bindings for Apple’s `ScriptingBridge.framework` on macOS.
-
-`scriptingbridge-rs` focuses on the dynamic Scripting Bridge workflow you use
-without generated glue headers:
-
-- `Application::with_bundle_identifier` for `SBApplication`
-- `is_running`, `launch`, `quit`, `activate`, and `terminate`
-- `tell(command, args)` for simple dynamic commands / property access
-- lightweight `ScriptObject` and `ElementArray` wrappers for generic results
+Safe Rust bindings for Apple’s `ScriptingBridge.framework` on macOS, extended
+with Swift-bridged `NSAppleEventDescriptor` and `NSAppleScript` helpers for
+fully dynamic automation flows.
 
 ## Status
 
-Initial `0.1.0` coverage targets dynamic `SBApplication` control only. It does
-not attempt to generate typed glue from `.sdef` files.
+`0.2.0` covers six logical areas:
+
+- `SBApplication`
+- `SBObject`
+- `SBElementArray`
+- `SBApplicationDelegate`
+- `NSAppleEventDescriptor`
+- `NSAppleScript`
+
+See [`COVERAGE.md`](COVERAGE.md) for the API-by-API matrix.
 
 ## Installation
 
 ```toml
 [dependencies]
-scriptingbridge-rs = "0.1"
+scriptingbridge-rs = "0.2"
 ```
 
 ## Quick start
@@ -36,29 +38,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Highlights
 
-- Swift bridge for `SBApplication` construction and app lifecycle control
-- `tell()` helper for zero- or one-argument dynamic calls
-- `ScriptObject` and `ElementArray` wrappers with description / `get()` helpers
-- Finder smoke example that safely inspects state without sending commands
+- `SBApplication` constructors by bundle identifier, URL, or process identifier,
+  plus `launch_flags`, `send_mode`, `timeout`, delegate attachment, and
+  `class_for_scripting_class`.
+- `ScriptObject` / `ElementArray` wrappers for property lookups, array queries,
+  and low-level Apple event sends.
+- `AppleEventDescriptor` builders for lists, records, addresses, raw `AEDesc`
+  round-trips, and Apple event mutation / sending.
+- `AppleScript` helpers for inline source, file-backed scripts, compilation, and
+  execution.
 
 ## API notes
 
-- `tell()` supports zero or one string argument in `0.1.0`; richer selector
-  shapes would require generated glue or more Objective-C runtime work.
-- Generated `.sdef` / `sdp` headers are the normal path for strongly typed access;
-  this crate intentionally stays on the dynamic API surface.
-- `launch()` uses AppKit’s async app-opening API bridged back into sync Rust.
+- `tell()` remains the convenience helper for zero- or one-argument string
+  selectors / key paths.
+- `SBObject::send_event` and `Application::send_event` expose the dynamic Apple
+  event path directly when you need lower-level control.
+- `AppleEventDescriptor` re-exports the standard Apple event send-option bitflags
+  and the `NSAppleScript` error dictionary keys.
 
-## Smoke example
+## Examples
 
 ```bash
 cargo run --example 01_finder_handle
-```
-
-Expected tail output:
-
-```text
-✅ scriptingbridge Finder app handle OK
+cargo run --example 02_sbobject_properties
+cargo run --example 03_sbelementarray_disks
+cargo run --example 04_sbapplication_delegate
+cargo run --example 05_nsappleeventdescriptor_roundtrip
+cargo run --example 06_nsapplescript_run
 ```
 
 ## License

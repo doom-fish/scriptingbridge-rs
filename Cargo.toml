@@ -1,11 +1,11 @@
 [package]
 name = "scriptingbridge-rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/doom-fish/scriptingbridge-rs"
 repository = "https://github.com/doom-fish/scriptingbridge-rs"
-description = "Safe Rust bindings for Apple's ScriptingBridge framework — dynamic SBApplication control on macOS"
+description = "Safe Rust bindings for Apple's ScriptingBridge framework plus Apple event and AppleScript helpers on macOS"
 authors = ["Per Johansson <per@doom.fish>"]
 keywords = ["scriptingbridge", "macos", "applescript", "automation", "apple"]
 categories = ["api-bindings", "os::macos-apis"]
@@ -22,6 +22,7 @@ include = [
     "README.md",
     "LICENSE-*",
     "CHANGELOG.md",
+    "COVERAGE.md",
 ]
 
 [lints.rust]
