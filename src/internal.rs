@@ -39,11 +39,7 @@ pub(crate) fn bridge_error(function: &'static str, error: *mut c_char) -> Script
     ScriptingBridgeError::new(function, take_c_string(error))
 }
 
-pub(crate) fn bool_result(
-    ok: bool,
-    function: &'static str,
-    error: *mut c_char,
-) -> Result<()> {
+pub(crate) fn bool_result(ok: bool, function: &'static str, error: *mut c_char) -> Result<()> {
     if ok {
         Ok(())
     } else {

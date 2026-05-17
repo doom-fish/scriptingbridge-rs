@@ -46,10 +46,7 @@ impl AppleEventDescriptor {
         )
     }
 
-    pub fn with_descriptor_type_and_bytes(
-        descriptor_type: DescType,
-        bytes: &[u8],
-    ) -> Result<Self> {
+    pub fn with_descriptor_type_and_bytes(descriptor_type: DescType, bytes: &[u8]) -> Result<Self> {
         descriptor_from_bytes(
             descriptor_type,
             bytes,
@@ -82,7 +79,9 @@ impl AppleEventDescriptor {
     }
 
     pub fn with_boolean(value: bool) -> Result<Self> {
-        let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_boolean(value) };
+        let raw = unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_boolean(value)
+        };
         required_handle(
             raw,
             "sb_apple_event_descriptor_create_with_boolean",
@@ -92,7 +91,9 @@ impl AppleEventDescriptor {
     }
 
     pub fn with_enum_code(value: OSType) -> Result<Self> {
-        let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_enum_code(value) };
+        let raw = unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_enum_code(value)
+        };
         required_handle(
             raw,
             "sb_apple_event_descriptor_create_with_enum_code",
@@ -102,7 +103,9 @@ impl AppleEventDescriptor {
     }
 
     pub fn with_int32(value: i32) -> Result<Self> {
-        let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_int32(value) };
+        let raw = unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_int32(value)
+        };
         required_handle(
             raw,
             "sb_apple_event_descriptor_create_with_int32",
@@ -112,7 +115,9 @@ impl AppleEventDescriptor {
     }
 
     pub fn with_double(value: f64) -> Result<Self> {
-        let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_double(value) };
+        let raw = unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_double(value)
+        };
         required_handle(
             raw,
             "sb_apple_event_descriptor_create_with_double",
@@ -122,7 +127,9 @@ impl AppleEventDescriptor {
     }
 
     pub fn with_type_code(value: OSType) -> Result<Self> {
-        let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_type_code(value) };
+        let raw = unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_type_code(value)
+        };
         required_handle(
             raw,
             "sb_apple_event_descriptor_create_with_type_code",
@@ -134,7 +141,9 @@ impl AppleEventDescriptor {
     pub fn with_string(value: &str) -> Result<Self> {
         let value = c_string(value, "sb_apple_event_descriptor_create_with_string")?;
         let raw = unsafe {
-            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_string(value.as_ptr())
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_string(
+                value.as_ptr(),
+            )
         };
         required_handle(
             raw,
@@ -146,7 +155,9 @@ impl AppleEventDescriptor {
 
     pub fn with_date(timestamp_seconds: f64) -> Result<Self> {
         let raw = unsafe {
-            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_date(timestamp_seconds)
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_date(
+                timestamp_seconds,
+            )
         };
         required_handle(
             raw,
@@ -157,7 +168,10 @@ impl AppleEventDescriptor {
     }
 
     pub fn with_file_url(path_or_url: &str) -> Result<Self> {
-        let value = c_string(path_or_url, "sb_apple_event_descriptor_create_with_file_url")?;
+        let value = c_string(
+            path_or_url,
+            "sb_apple_event_descriptor_create_with_file_url",
+        )?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_file_url(
@@ -220,7 +234,8 @@ impl AppleEventDescriptor {
     }
 
     pub fn current_process() -> Result<Self> {
-        let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_current_process() };
+        let raw =
+            unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_current_process() };
         required_handle(
             raw,
             "sb_apple_event_descriptor_current_process",
@@ -312,7 +327,9 @@ impl AppleEventDescriptor {
     }
 
     pub fn descriptor_type(&self) -> DescType {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_descriptor_type(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_descriptor_type(self.0.as_ptr())
+        }
     }
 
     pub fn data(&self) -> Vec<u8> {
@@ -327,42 +344,60 @@ impl AppleEventDescriptor {
     }
 
     pub fn boolean_value(&self) -> bool {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_boolean_value(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_boolean_value(self.0.as_ptr())
+        }
     }
 
     pub fn enum_code_value(&self) -> OSType {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_enum_code_value(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_enum_code_value(self.0.as_ptr())
+        }
     }
 
     pub fn int32_value(&self) -> i32 {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_int32_value(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_int32_value(self.0.as_ptr())
+        }
     }
 
     pub fn double_value(&self) -> f64 {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_double_value(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_double_value(self.0.as_ptr())
+        }
     }
 
     pub fn type_code_value(&self) -> OSType {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_type_code_value(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_type_code_value(self.0.as_ptr())
+        }
     }
 
     pub fn string_value(&self) -> Option<String> {
-        let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_string_value(self.0.as_ptr()) };
+        let raw = unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_string_value(self.0.as_ptr())
+        };
         take_optional_c_string(raw)
     }
 
     pub fn date_value(&self) -> Option<f64> {
-        let value = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_date_value(self.0.as_ptr()) };
+        let value = unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_date_value(self.0.as_ptr())
+        };
         (!value.is_nan()).then_some(value)
     }
 
     pub fn file_url_value(&self) -> Option<String> {
-        let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_file_url_value(self.0.as_ptr()) };
+        let raw = unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_file_url_value(self.0.as_ptr())
+        };
         take_optional_c_string(raw)
     }
 
     pub fn event_class(&self) -> AEEventClass {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_event_class(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_event_class(self.0.as_ptr())
+        }
     }
 
     pub fn event_id(&self) -> AEEventID {
@@ -374,7 +409,9 @@ impl AppleEventDescriptor {
     }
 
     pub fn transaction_id(&self) -> AETransactionID {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_transaction_id(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_transaction_id(self.0.as_ptr())
+        }
     }
 
     pub fn set_param_descriptor(&self, descriptor: &Self, keyword: AEKeyword) -> Result<()> {
@@ -467,7 +504,11 @@ impl AppleEventDescriptor {
     }
 
     pub fn is_record_descriptor(&self) -> bool {
-        unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_is_record_descriptor(self.0.as_ptr()) }
+        unsafe {
+            ffi::apple_event_descriptor::sb_apple_event_descriptor_is_record_descriptor(
+                self.0.as_ptr(),
+            )
+        }
     }
 
     pub fn number_of_items(&self) -> usize {
@@ -534,7 +575,11 @@ impl AppleEventDescriptor {
                 &mut error,
             )
         };
-        bool_result(ok, "sb_apple_event_descriptor_remove_descriptor_at_index", error)
+        bool_result(
+            ok,
+            "sb_apple_event_descriptor_remove_descriptor_at_index",
+            error,
+        )
     }
 
     pub fn set_descriptor(&self, descriptor: &Self, keyword: AEKeyword) -> Result<()> {
@@ -672,9 +717,8 @@ fn descriptor_from_bytes(
     function: &'static str,
     create: impl FnOnce(DescType, *const u8, i64, *mut *mut i8) -> *mut c_void,
 ) -> Result<AppleEventDescriptor> {
-    let length = i64::try_from(bytes.len()).map_err(|_| {
-        crate::ScriptingBridgeError::new(function, "buffer length exceeds i64")
-    })?;
+    let length = i64::try_from(bytes.len())
+        .map_err(|_| crate::ScriptingBridgeError::new(function, "buffer length exceeds i64"))?;
     let mut error = std::ptr::null_mut();
     let raw = create(descriptor_type, bytes.as_ptr(), length, &mut error);
     required_handle(raw, function, error, AppleEventDescriptor::from_raw)
@@ -688,7 +732,12 @@ fn descriptor_mutation(
     mutate: impl FnOnce(*mut c_void, *mut c_void, AEKeyword, *mut *mut i8) -> bool,
 ) -> Result<()> {
     let mut error = std::ptr::null_mut();
-    let ok = mutate(handle.0.as_ptr(), descriptor.0.as_ptr(), keyword, &mut error);
+    let ok = mutate(
+        handle.0.as_ptr(),
+        descriptor.0.as_ptr(),
+        keyword,
+        &mut error,
+    );
     bool_result(ok, function, error)
 }
 

@@ -23,7 +23,10 @@ fn sbelementarray_finder_disks_queries_smoke() -> Result<()> {
             &AppleEventDescriptor::with_string("name")?,
         )?
         .expect("arrayByApplyingSelector(valueForKey:) should produce a descriptor");
-    assert!(names_via_value_for_key.number_of_items() >= 1 || names_via_value_for_key.string_value().is_some());
+    assert!(
+        names_via_value_for_key.number_of_items() >= 1
+            || names_via_value_for_key.string_value().is_some()
+    );
 
     let first_disk = disks
         .object_at_location(&AppleEventDescriptor::with_int32(1)?)?

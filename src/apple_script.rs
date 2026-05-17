@@ -3,7 +3,9 @@ use std::ptr::NonNull;
 
 use crate::apple_event_descriptor::AppleEventDescriptor;
 use crate::ffi;
-use crate::internal::{bool_result, c_string, optional_handle, required_handle, take_optional_c_string};
+use crate::internal::{
+    bool_result, c_string, optional_handle, required_handle, take_optional_c_string,
+};
 use crate::Result;
 
 pub const APPLE_SCRIPT_ERROR_MESSAGE_KEY: &str = "NSAppleScriptErrorMessage";
@@ -31,10 +33,7 @@ impl AppleScript {
     }
 
     pub fn with_contents_of_url(path_or_url: &str) -> Result<Self> {
-        let path_or_url = c_string(
-            path_or_url,
-            "sb_apple_script_create_with_contents_of_url",
-        )?;
+        let path_or_url = c_string(path_or_url, "sb_apple_script_create_with_contents_of_url")?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
             ffi::apple_script::sb_apple_script_create_with_contents_of_url(
@@ -67,7 +66,8 @@ impl AppleScript {
 
     pub fn execute(&self) -> Result<Option<AppleEventDescriptor>> {
         let mut error = std::ptr::null_mut();
-        let raw = unsafe { ffi::apple_script::sb_apple_script_execute(self.0.as_ptr(), &mut error) };
+        let raw =
+            unsafe { ffi::apple_script::sb_apple_script_execute(self.0.as_ptr(), &mut error) };
         optional_handle(
             raw,
             "sb_apple_script_execute",
@@ -76,7 +76,10 @@ impl AppleScript {
         )
     }
 
-    pub fn execute_apple_event(&self, event: &AppleEventDescriptor) -> Result<Option<AppleEventDescriptor>> {
+    pub fn execute_apple_event(
+        &self,
+        event: &AppleEventDescriptor,
+    ) -> Result<Option<AppleEventDescriptor>> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
             ffi::apple_script::sb_apple_script_execute_apple_event(

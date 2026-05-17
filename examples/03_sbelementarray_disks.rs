@@ -8,7 +8,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Disks get() description: {:?}", disks.get_description());
         println!(
             "Disk names: {:?}",
-            disks.array_by_applying_selector("name")?
+            disks
+                .array_by_applying_selector("name")?
                 .map(|descriptor| descriptor.number_of_items())
         );
         println!(

@@ -12,12 +12,10 @@ fn sbobject_creation_and_property_access_smoke() -> Result<()> {
         .property_with_code(four_char_code(*b"pnam"))?
         .expect("Finder application should expose a name property");
     assert!(name_property.get_description().is_some());
-    assert!(
-        name_property
-            .get()?
-            .and_then(|descriptor| descriptor.string_value())
-            .is_some()
-    );
+    assert!(name_property
+        .get()?
+        .and_then(|descriptor| descriptor.string_value())
+        .is_some());
 
     let empty = ScriptObject::new()?;
     assert!(empty.description().is_some());

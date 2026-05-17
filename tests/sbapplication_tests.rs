@@ -13,13 +13,16 @@ fn sbapplication_constructors_and_properties_round_trip() -> Result<()> {
         .expect("Finder should have a process identifier after activation");
     let by_process_identifier = Application::with_process_identifier(process_identifier)?;
     let shared_by_url = Application::shared_with_url(common::FINDER_FILE_URL)?;
-    let shared_by_process_identifier = Application::shared_with_process_identifier(process_identifier)?;
+    let shared_by_process_identifier =
+        Application::shared_with_process_identifier(process_identifier)?;
 
     assert!(application.is_running());
     assert!(by_process_identifier.process_identifier().is_some());
     assert!(shared_by_process_identifier.is_running());
     assert!(by_url.class_for_scripting_class("disk")?.is_some());
-    assert!(shared_by_url.class_for_scripting_class("application")?.is_some());
+    assert!(shared_by_url
+        .class_for_scripting_class("application")?
+        .is_some());
 
     let launch_flags = application.launch_flags();
     application.set_launch_flags(launch_flags)?;

@@ -83,8 +83,7 @@ unsafe extern "C" fn application_delegate_trampoline(
         error_message: c_string_from_ptr(error_message),
     };
 
-    (state.callback)(&event)
-        .map_or(std::ptr::null_mut(), AppleEventDescriptor::into_raw)
+    (state.callback)(&event).map_or(std::ptr::null_mut(), AppleEventDescriptor::into_raw)
 }
 
 unsafe extern "C" fn application_delegate_drop_trampoline(context: *mut c_void) {

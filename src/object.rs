@@ -51,7 +51,10 @@ impl ScriptObject {
     pub fn with_properties(properties: &[Property<'_>]) -> Result<Self> {
         let buffers = property_buffers(properties, "sb_object_create_with_properties")?;
         let count = i64::try_from(properties.len()).map_err(|_| {
-            crate::ScriptingBridgeError::new("sb_object_create_with_properties", "too many properties")
+            crate::ScriptingBridgeError::new(
+                "sb_object_create_with_properties",
+                "too many properties",
+            )
         })?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -62,7 +65,12 @@ impl ScriptObject {
                 &mut error,
             )
         };
-        required_handle(raw, "sb_object_create_with_properties", error, Self::from_raw)
+        required_handle(
+            raw,
+            "sb_object_create_with_properties",
+            error,
+            Self::from_raw,
+        )
     }
 
     pub fn with_data(data: &AppleEventDescriptor) -> Result<Self> {
@@ -78,7 +86,10 @@ impl ScriptObject {
     ) -> Result<Self> {
         let buffers = property_buffers(properties, "sb_object_create_with_element_code")?;
         let count = i64::try_from(properties.len()).map_err(|_| {
-            crate::ScriptingBridgeError::new("sb_object_create_with_element_code", "too many properties")
+            crate::ScriptingBridgeError::new(
+                "sb_object_create_with_element_code",
+                "too many properties",
+            )
         })?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -91,7 +102,12 @@ impl ScriptObject {
                 &mut error,
             )
         };
-        required_handle(raw, "sb_object_create_with_element_code", error, Self::from_raw)
+        required_handle(
+            raw,
+            "sb_object_create_with_element_code",
+            error,
+            Self::from_raw,
+        )
     }
 
     pub fn get(&self) -> Result<Option<AppleEventDescriptor>> {
@@ -117,7 +133,8 @@ impl ScriptObject {
 
     pub fn property_with_code(&self, code: DescType) -> Result<Option<Self>> {
         let mut error = std::ptr::null_mut();
-        let raw = unsafe { ffi::object::sb_object_property_with_code(self.0.as_ptr(), code, &mut error) };
+        let raw =
+            unsafe { ffi::object::sb_object_property_with_code(self.0.as_ptr(), code, &mut error) };
         optional_handle(raw, "sb_object_property_with_code", error, Self::from_raw)
     }
 
@@ -140,8 +157,15 @@ impl ScriptObject {
 
     pub fn element_array_with_code(&self, code: DescType) -> Result<Option<ElementArray>> {
         let mut error = std::ptr::null_mut();
-        let raw = unsafe { ffi::object::sb_object_element_array_with_code(self.0.as_ptr(), code, &mut error) };
-        optional_handle(raw, "sb_object_element_array_with_code", error, ElementArray::from_raw)
+        let raw = unsafe {
+            ffi::object::sb_object_element_array_with_code(self.0.as_ptr(), code, &mut error)
+        };
+        optional_handle(
+            raw,
+            "sb_object_element_array_with_code",
+            error,
+            ElementArray::from_raw,
+        )
     }
 
     pub fn send_event(
@@ -153,7 +177,10 @@ impl ScriptObject {
         let codes = parameter_codes(parameters);
         let values = parameter_values(parameters);
         let count = i64::try_from(parameters.len()).map_err(|_| {
-            crate::ScriptingBridgeError::new("sb_object_send_event", "too many Apple event parameters")
+            crate::ScriptingBridgeError::new(
+                "sb_object_send_event",
+                "too many Apple event parameters",
+            )
         })?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -167,7 +194,12 @@ impl ScriptObject {
                 &mut error,
             )
         };
-        optional_handle(raw, "sb_object_send_event", error, AppleEventDescriptor::from_raw)
+        optional_handle(
+            raw,
+            "sb_object_send_event",
+            error,
+            AppleEventDescriptor::from_raw,
+        )
     }
 
     pub fn set_to(&self, value: Option<&AppleEventDescriptor>) -> Result<()> {
@@ -193,7 +225,10 @@ impl Drop for ScriptObject {
     }
 }
 
-fn property_buffers(properties: &[Property<'_>], function: &'static str) -> Result<PropertyBuffers> {
+fn property_buffers(
+    properties: &[Property<'_>],
+    function: &'static str,
+) -> Result<PropertyBuffers> {
     let names = properties
         .iter()
         .map(|property| c_string(property.name, function))

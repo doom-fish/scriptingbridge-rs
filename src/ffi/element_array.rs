@@ -27,10 +27,7 @@ unsafe extern "C" {
         argument: *mut c_void,
         error_out: *mut *mut c_char,
     ) -> *mut c_void;
-    pub fn sb_element_array_get(
-        handle: *mut c_void,
-        error_out: *mut *mut c_char,
-    ) -> *mut c_void;
+    pub fn sb_element_array_get(handle: *mut c_void, error_out: *mut *mut c_char) -> *mut c_void;
     pub fn sb_element_array_description(handle: *mut c_void) -> *mut c_char;
     pub fn sb_element_array_get_description(handle: *mut c_void) -> *mut c_char;
     pub fn sb_element_array_release(handle: *mut c_void);

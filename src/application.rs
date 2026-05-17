@@ -24,23 +24,38 @@ impl Application {
             bundle_identifier,
             "sb_application_create_with_bundle_identifier",
             |value, error| unsafe {
-                ffi::application::sb_application_create_with_bundle_identifier(value.as_ptr(), error)
+                ffi::application::sb_application_create_with_bundle_identifier(
+                    value.as_ptr(),
+                    error,
+                )
             },
         )
     }
 
     pub fn with_url(url: &str) -> Result<Self> {
-        create_application(url, "sb_application_create_with_url", |value, error| unsafe {
-            ffi::application::sb_application_create_with_url(value.as_ptr(), error)
-        })
+        create_application(
+            url,
+            "sb_application_create_with_url",
+            |value, error| unsafe {
+                ffi::application::sb_application_create_with_url(value.as_ptr(), error)
+            },
+        )
     }
 
     pub fn with_process_identifier(process_identifier: i32) -> Result<Self> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
-            ffi::application::sb_application_create_with_process_identifier(process_identifier, &mut error)
+            ffi::application::sb_application_create_with_process_identifier(
+                process_identifier,
+                &mut error,
+            )
         };
-        required_handle(raw, "sb_application_create_with_process_identifier", error, Self)
+        required_handle(
+            raw,
+            "sb_application_create_with_process_identifier",
+            error,
+            Self,
+        )
     }
 
     pub fn shared_with_bundle_identifier(bundle_identifier: &str) -> Result<Self> {
@@ -48,23 +63,38 @@ impl Application {
             bundle_identifier,
             "sb_application_shared_with_bundle_identifier",
             |value, error| unsafe {
-                ffi::application::sb_application_shared_with_bundle_identifier(value.as_ptr(), error)
+                ffi::application::sb_application_shared_with_bundle_identifier(
+                    value.as_ptr(),
+                    error,
+                )
             },
         )
     }
 
     pub fn shared_with_url(url: &str) -> Result<Self> {
-        create_application(url, "sb_application_shared_with_url", |value, error| unsafe {
-            ffi::application::sb_application_shared_with_url(value.as_ptr(), error)
-        })
+        create_application(
+            url,
+            "sb_application_shared_with_url",
+            |value, error| unsafe {
+                ffi::application::sb_application_shared_with_url(value.as_ptr(), error)
+            },
+        )
     }
 
     pub fn shared_with_process_identifier(process_identifier: i32) -> Result<Self> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
-            ffi::application::sb_application_shared_with_process_identifier(process_identifier, &mut error)
+            ffi::application::sb_application_shared_with_process_identifier(
+                process_identifier,
+                &mut error,
+            )
         };
-        required_handle(raw, "sb_application_shared_with_process_identifier", error, Self)
+        required_handle(
+            raw,
+            "sb_application_shared_with_process_identifier",
+            error,
+            Self,
+        )
     }
 
     pub fn as_object(&self) -> Result<ScriptObject> {
@@ -100,7 +130,8 @@ impl Application {
     }
 
     pub fn process_identifier(&self) -> Option<i32> {
-        let process_identifier = unsafe { ffi::application::sb_application_process_identifier(self.0.as_ptr()) };
+        let process_identifier =
+            unsafe { ffi::application::sb_application_process_identifier(self.0.as_ptr()) };
         (process_identifier >= 0).then_some(process_identifier)
     }
 
@@ -135,7 +166,11 @@ impl Application {
     pub fn set_launch_flags(&self, launch_flags: LaunchFlags) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe {
-            ffi::application::sb_application_set_launch_flags(self.0.as_ptr(), launch_flags, &mut error)
+            ffi::application::sb_application_set_launch_flags(
+                self.0.as_ptr(),
+                launch_flags,
+                &mut error,
+            )
         };
         bool_result(ok, "sb_application_set_launch_flags", error)
     }
@@ -254,7 +289,11 @@ impl Application {
         let key_path = c_string(key_path, "sb_application_object_for_key_path")?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
-            ffi::application::sb_application_object_for_key_path(self.0.as_ptr(), key_path.as_ptr(), &mut error)
+            ffi::application::sb_application_object_for_key_path(
+                self.0.as_ptr(),
+                key_path.as_ptr(),
+                &mut error,
+            )
         };
         optional_handle(
             raw,

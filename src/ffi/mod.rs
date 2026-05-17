@@ -1,9 +1,9 @@
 use std::ffi::{c_char, c_void};
 
-pub mod application;
-pub mod application_delegate;
 pub mod apple_event_descriptor;
 pub mod apple_script;
+pub mod application;
+pub mod application_delegate;
 pub mod element_array;
 pub mod object;
 

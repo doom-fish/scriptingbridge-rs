@@ -29,7 +29,10 @@ impl ElementArray {
         )
     }
 
-    pub fn object_with_id(&self, identifier: &AppleEventDescriptor) -> Result<Option<ScriptObject>> {
+    pub fn object_with_id(
+        &self,
+        identifier: &AppleEventDescriptor,
+    ) -> Result<Option<ScriptObject>> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
             ffi::element_array::sb_element_array_object_with_id(
@@ -46,7 +49,10 @@ impl ElementArray {
         )
     }
 
-    pub fn object_at_location(&self, location: &AppleEventDescriptor) -> Result<Option<ScriptObject>> {
+    pub fn object_at_location(
+        &self,
+        location: &AppleEventDescriptor,
+    ) -> Result<Option<ScriptObject>> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
             ffi::element_array::sb_element_array_object_at_location(
