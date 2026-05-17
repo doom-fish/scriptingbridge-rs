@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1] - 2025-01-09
+
+### Fixed
+
+- Added SAFETY: comments to all `unsafe` blocks explaining their correctness
+- Added panic-safety handling to `extern "C"` callbacks in `ApplicationDelegate`
+  to prevent panics from unwinding across the FFI boundary
+- Added `doom-fish-utils` dependency for panic catching helpers
+
 ## [0.2.0] - 2026-05-16
 
 ### Added

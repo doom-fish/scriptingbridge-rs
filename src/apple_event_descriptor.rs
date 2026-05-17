@@ -37,6 +37,8 @@ pub struct RawAppleEventDescriptor(NonNull<c_void>);
 
 impl AppleEventDescriptor {
     pub fn null() -> Result<Self> {
+        // SAFETY: sb_apple_event_descriptor_null returns a valid handle or null.
+        // No error pointer is needed for this simple factory function.
         let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_null() };
         required_handle(
             raw,

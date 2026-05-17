@@ -3,5 +3,12 @@
 version = 3
 
 [[package]]
+name = "doom-fish-utils"
+version = "0.1.1"
+
+[[package]]
 name = "scriptingbridge-rs"
 version = "0.2.0"
+dependencies = [
+ "doom-fish-utils",
+]
