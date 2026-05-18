@@ -8,7 +8,7 @@ use crate::internal::{
 use crate::Result;
 
 pub type DescType = u32;
-pub type OSType = u32;
+pub use apple_cf::raw::OSType;
 pub type AEKeyword = u32;
 pub type AEEventClass = u32;
 pub type AEEventID = u32;

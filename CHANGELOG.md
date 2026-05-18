@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0] - 2026-05-18
+
+### Changed
+
+- Added `apple-cf` (`>=0.9, <0.10`) and re-exported `OSType` from `apple_cf::raw`, removing the crate-local duplicate alias used by the Apple event helpers.
+
 ## [0.2.1] - 2025-01-09
 
 ### Fixed
