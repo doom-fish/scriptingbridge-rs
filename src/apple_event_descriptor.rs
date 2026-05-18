@@ -7,35 +7,57 @@ use crate::internal::{
 };
 use crate::Result;
 
+/// Mirrors the Apple Event Manager descriptor type used by `NSAppleEventDescriptor`.
 pub type DescType = u32;
+/// Re-exports the Core Foundation `OSType` used by Scripting Bridge and Apple events.
 pub use apple_cf::raw::OSType;
+/// Mirrors the Apple event keyword type used by `NSAppleEventDescriptor`.
 pub type AEKeyword = u32;
+/// Mirrors the Apple event class code used by `NSAppleEventDescriptor`.
 pub type AEEventClass = u32;
+/// Mirrors the Apple event ID code used by `NSAppleEventDescriptor`.
 pub type AEEventID = u32;
+/// Mirrors the Apple event return ID used by `NSAppleEventDescriptor`.
 pub type AEReturnID = i16;
+/// Mirrors the Apple event transaction ID used by `NSAppleEventDescriptor`.
 pub type AETransactionID = i32;
+/// Mirrors the Apple Event Manager send-option bitfield used by `NSAppleEventDescriptor`.
 pub type AppleEventSendOptions = u64;
 
+/// Matches the Apple Event Manager `kAENoReply` send option.
 pub const APPLE_EVENT_SEND_NO_REPLY: AppleEventSendOptions = 0x0000_0001;
+/// Matches the Apple Event Manager `kAEQueueReply` send option.
 pub const APPLE_EVENT_SEND_QUEUE_REPLY: AppleEventSendOptions = 0x0000_0002;
+/// Matches the Apple Event Manager `kAEWaitReply` send option.
 pub const APPLE_EVENT_SEND_WAIT_FOR_REPLY: AppleEventSendOptions = 0x0000_0003;
+/// Matches the Apple Event Manager `kAENeverInteract` send option.
 pub const APPLE_EVENT_SEND_NEVER_INTERACT: AppleEventSendOptions = 0x0000_0010;
+/// Matches the Apple Event Manager `kAECanInteract` send option.
 pub const APPLE_EVENT_SEND_CAN_INTERACT: AppleEventSendOptions = 0x0000_0020;
+/// Matches the Apple Event Manager `kAEAlwaysInteract` send option.
 pub const APPLE_EVENT_SEND_ALWAYS_INTERACT: AppleEventSendOptions = 0x0000_0030;
+/// Matches the Apple Event Manager `kAECanSwitchLayer` send option.
 pub const APPLE_EVENT_SEND_CAN_SWITCH_LAYER: AppleEventSendOptions = 0x0000_0040;
+/// Matches the Apple Event Manager `kAEDontRecord` send option.
 pub const APPLE_EVENT_SEND_DONT_RECORD: AppleEventSendOptions = 0x0000_1000;
+/// Matches the Apple Event Manager `kAEDontExecute` send option.
 pub const APPLE_EVENT_SEND_DONT_EXECUTE: AppleEventSendOptions = 0x0000_2000;
+/// Matches the Apple Event Manager `kAEDontAnnotate` send option.
 pub const APPLE_EVENT_SEND_DONT_ANNOTATE: AppleEventSendOptions = 0x0001_0000;
+/// Uses the default wait-for-reply and can-interact send options.
 pub const APPLE_EVENT_SEND_DEFAULT_OPTIONS: AppleEventSendOptions =
     APPLE_EVENT_SEND_WAIT_FOR_REPLY | APPLE_EVENT_SEND_CAN_INTERACT;
 
+/// Wraps an `NSAppleEventDescriptor` instance.
 #[derive(Debug)]
 pub struct AppleEventDescriptor(NonNull<c_void>);
 
+/// Owns a raw `AEDesc` copied from `NSAppleEventDescriptor`.
 #[derive(Debug)]
 pub struct RawAppleEventDescriptor(NonNull<c_void>);
 
 impl AppleEventDescriptor {
+    /// Creates the `NSAppleEventDescriptor` null descriptor.
     pub fn null() -> Result<Self> {
         // SAFETY: sb_apple_event_descriptor_null returns a valid handle or null.
         // No error pointer is needed for this simple factory function.
@@ -48,6 +70,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` from raw descriptor bytes.
     pub fn with_descriptor_type_and_bytes(descriptor_type: DescType, bytes: &[u8]) -> Result<Self> {
         descriptor_from_bytes(
             descriptor_type,
@@ -64,6 +87,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` from raw descriptor data.
     pub fn with_descriptor_type_and_data(descriptor_type: DescType, data: &[u8]) -> Result<Self> {
         descriptor_from_bytes(
             descriptor_type,
@@ -80,6 +104,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` boolean descriptor.
     pub fn with_boolean(value: bool) -> Result<Self> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_boolean(value)
@@ -92,6 +117,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` enum-code descriptor.
     pub fn with_enum_code(value: OSType) -> Result<Self> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_enum_code(value)
@@ -104,6 +130,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` 32-bit integer descriptor.
     pub fn with_int32(value: i32) -> Result<Self> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_int32(value)
@@ -116,6 +143,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` floating-point descriptor.
     pub fn with_double(value: f64) -> Result<Self> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_double(value)
@@ -128,6 +156,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` type-code descriptor.
     pub fn with_type_code(value: OSType) -> Result<Self> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_type_code(value)
@@ -140,6 +169,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` string descriptor.
     pub fn with_string(value: &str) -> Result<Self> {
         let value = c_string(value, "sb_apple_event_descriptor_create_with_string")?;
         let raw = unsafe {
@@ -155,6 +185,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` date descriptor from a timestamp.
     pub fn with_date(timestamp_seconds: f64) -> Result<Self> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_date(
@@ -169,6 +200,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` file URL descriptor.
     pub fn with_file_url(path_or_url: &str) -> Result<Self> {
         let value = c_string(
             path_or_url,
@@ -189,6 +221,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` Apple event header.
     pub fn apple_event(
         event_class: AEEventClass,
         event_id: AEEventID,
@@ -215,6 +248,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` list descriptor.
     pub fn list() -> Result<Self> {
         let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_create_list() };
         required_handle(
@@ -225,6 +259,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an `NSAppleEventDescriptor` record descriptor.
     pub fn record() -> Result<Self> {
         let raw = unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_create_record() };
         required_handle(
@@ -235,6 +270,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates the current-process target descriptor used by `NSAppleEventDescriptor`.
     pub fn current_process() -> Result<Self> {
         let raw =
             unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_current_process() };
@@ -246,6 +282,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates a process target `NSAppleEventDescriptor`.
     pub fn with_process_identifier(process_identifier: i32) -> Result<Self> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_process_identifier(
@@ -260,6 +297,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an application target `NSAppleEventDescriptor` from a bundle identifier.
     pub fn with_bundle_identifier(bundle_identifier: &str) -> Result<Self> {
         let bundle_identifier = c_string(
             bundle_identifier,
@@ -278,6 +316,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Creates an application target `NSAppleEventDescriptor` from a URL.
     pub fn with_application_url(url: &str) -> Result<Self> {
         let url = c_string(url, "sb_apple_event_descriptor_create_with_application_url")?;
         let mut error = std::ptr::null_mut();
@@ -295,6 +334,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Copies this `NSAppleEventDescriptor` into an owned raw `AEDesc`.
     pub fn to_raw_aedesc(&self) -> Result<RawAppleEventDescriptor> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -311,6 +351,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Wraps an owned raw `AEDesc` as an `NSAppleEventDescriptor` without copying.
     pub fn from_raw_aedesc_no_copy(raw_descriptor: RawAppleEventDescriptor) -> Result<Self> {
         let raw_descriptor = raw_descriptor.into_raw();
         let mut error = std::ptr::null_mut();
@@ -328,12 +369,14 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Returns the descriptor type reported by `NSAppleEventDescriptor`.
     pub fn descriptor_type(&self) -> DescType {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_descriptor_type(self.0.as_ptr())
         }
     }
 
+    /// Returns the raw data payload held by `NSAppleEventDescriptor`.
     pub fn data(&self) -> Vec<u8> {
         let mut length = 0_i64;
         let raw = unsafe {
@@ -345,36 +388,42 @@ impl AppleEventDescriptor {
         take_bytes(raw, usize::try_from(length).unwrap_or_default())
     }
 
+    /// Returns the boolean value stored in this `NSAppleEventDescriptor`.
     pub fn boolean_value(&self) -> bool {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_boolean_value(self.0.as_ptr())
         }
     }
 
+    /// Returns the enum `OSType` stored in this `NSAppleEventDescriptor`.
     pub fn enum_code_value(&self) -> OSType {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_enum_code_value(self.0.as_ptr())
         }
     }
 
+    /// Returns the 32-bit integer stored in this `NSAppleEventDescriptor`.
     pub fn int32_value(&self) -> i32 {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_int32_value(self.0.as_ptr())
         }
     }
 
+    /// Returns the floating-point value stored in this `NSAppleEventDescriptor`.
     pub fn double_value(&self) -> f64 {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_double_value(self.0.as_ptr())
         }
     }
 
+    /// Returns the type-code `OSType` stored in this `NSAppleEventDescriptor`.
     pub fn type_code_value(&self) -> OSType {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_type_code_value(self.0.as_ptr())
         }
     }
 
+    /// Returns the string value stored in this `NSAppleEventDescriptor`.
     pub fn string_value(&self) -> Option<String> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_string_value(self.0.as_ptr())
@@ -382,6 +431,7 @@ impl AppleEventDescriptor {
         take_optional_c_string(raw)
     }
 
+    /// Returns the date value stored in this `NSAppleEventDescriptor`.
     pub fn date_value(&self) -> Option<f64> {
         let value = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_date_value(self.0.as_ptr())
@@ -389,6 +439,7 @@ impl AppleEventDescriptor {
         (!value.is_nan()).then_some(value)
     }
 
+    /// Returns the file URL value stored in this `NSAppleEventDescriptor`.
     pub fn file_url_value(&self) -> Option<String> {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_file_url_value(self.0.as_ptr())
@@ -396,26 +447,31 @@ impl AppleEventDescriptor {
         take_optional_c_string(raw)
     }
 
+    /// Returns the Apple event class stored in this `NSAppleEventDescriptor`.
     pub fn event_class(&self) -> AEEventClass {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_event_class(self.0.as_ptr())
         }
     }
 
+    /// Returns the Apple event ID stored in this `NSAppleEventDescriptor`.
     pub fn event_id(&self) -> AEEventID {
         unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_event_id(self.0.as_ptr()) }
     }
 
+    /// Returns the Apple event return ID stored in this `NSAppleEventDescriptor`.
     pub fn return_id(&self) -> AEReturnID {
         unsafe { ffi::apple_event_descriptor::sb_apple_event_descriptor_return_id(self.0.as_ptr()) }
     }
 
+    /// Returns the Apple event transaction ID stored in this `NSAppleEventDescriptor`.
     pub fn transaction_id(&self) -> AETransactionID {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_transaction_id(self.0.as_ptr())
         }
     }
 
+    /// Sets an Apple event parameter on this `NSAppleEventDescriptor`.
     pub fn set_param_descriptor(&self, descriptor: &Self, keyword: AEKeyword) -> Result<()> {
         descriptor_mutation(
             self,
@@ -430,6 +486,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Looks up an Apple event parameter by keyword on this `NSAppleEventDescriptor`.
     pub fn param_descriptor_for_keyword(&self, keyword: AEKeyword) -> Result<Option<Self>> {
         descriptor_lookup(
             self,
@@ -443,6 +500,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Removes an Apple event parameter by keyword from this `NSAppleEventDescriptor`.
     pub fn remove_param_descriptor(&self, keyword: AEKeyword) -> Result<()> {
         descriptor_keyword_bool(
             self,
@@ -456,6 +514,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Sets an Apple event attribute on this `NSAppleEventDescriptor`.
     pub fn set_attribute_descriptor(&self, descriptor: &Self, keyword: AEKeyword) -> Result<()> {
         descriptor_mutation(
             self,
@@ -470,6 +529,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Looks up an Apple event attribute by keyword on this `NSAppleEventDescriptor`.
     pub fn attribute_descriptor_for_keyword(&self, keyword: AEKeyword) -> Result<Option<Self>> {
         descriptor_lookup(
             self,
@@ -483,6 +543,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Sends this Apple event descriptor and returns any reply descriptor.
     pub fn send_event(
         &self,
         send_options: AppleEventSendOptions,
@@ -505,6 +566,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Returns whether this `NSAppleEventDescriptor` is a record descriptor.
     pub fn is_record_descriptor(&self) -> bool {
         unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_is_record_descriptor(
@@ -513,6 +575,7 @@ impl AppleEventDescriptor {
         }
     }
 
+    /// Returns the item count reported by this `NSAppleEventDescriptor`.
     pub fn number_of_items(&self) -> usize {
         usize::try_from(unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_number_of_items(self.0.as_ptr())
@@ -520,6 +583,7 @@ impl AppleEventDescriptor {
         .unwrap_or_default()
     }
 
+    /// Inserts a child descriptor into this list-style `NSAppleEventDescriptor`.
     pub fn insert_descriptor(&self, descriptor: &Self, index: usize) -> Result<()> {
         let index = i64::try_from(index).map_err(|_| {
             crate::ScriptingBridgeError::new(
@@ -539,6 +603,7 @@ impl AppleEventDescriptor {
         bool_result(ok, "sb_apple_event_descriptor_insert_descriptor", error)
     }
 
+    /// Returns the child descriptor at the given index from this `NSAppleEventDescriptor`.
     pub fn descriptor_at_index(&self, index: usize) -> Result<Option<Self>> {
         let index = i64::try_from(index).map_err(|_| {
             crate::ScriptingBridgeError::new(
@@ -562,6 +627,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Removes the child descriptor at the given index from this `NSAppleEventDescriptor`.
     pub fn remove_descriptor_at_index(&self, index: usize) -> Result<()> {
         let index = i64::try_from(index).map_err(|_| {
             crate::ScriptingBridgeError::new(
@@ -584,6 +650,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Sets a record item on this `NSAppleEventDescriptor` by keyword.
     pub fn set_descriptor(&self, descriptor: &Self, keyword: AEKeyword) -> Result<()> {
         descriptor_mutation(
             self,
@@ -598,6 +665,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Looks up a record item on this `NSAppleEventDescriptor` by keyword.
     pub fn descriptor_for_keyword(&self, keyword: AEKeyword) -> Result<Option<Self>> {
         descriptor_lookup(
             self,
@@ -611,6 +679,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Removes a record item from this `NSAppleEventDescriptor` by keyword.
     pub fn remove_descriptor_for_keyword(&self, keyword: AEKeyword) -> Result<()> {
         descriptor_keyword_bool(
             self,
@@ -624,6 +693,7 @@ impl AppleEventDescriptor {
         )
     }
 
+    /// Returns the record keyword for the descriptor at the given index.
     pub fn keyword_for_descriptor_at_index(&self, index: usize) -> Result<AEKeyword> {
         let index = i64::try_from(index).map_err(|_| {
             crate::ScriptingBridgeError::new(
@@ -649,6 +719,7 @@ impl AppleEventDescriptor {
         }
     }
 
+    /// Coerces this `NSAppleEventDescriptor` to another descriptor type.
     pub fn coerce_to_descriptor_type(&self, descriptor_type: DescType) -> Result<Option<Self>> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -682,6 +753,7 @@ impl AppleEventDescriptor {
 }
 
 impl RawAppleEventDescriptor {
+    /// Returns the descriptor type stored in this raw `AEDesc`.
     pub fn descriptor_type(&self) -> DescType {
         unsafe { ffi::apple_event_descriptor::sb_aedesc_descriptor_type(self.0.as_ptr()) }
     }
@@ -709,6 +781,7 @@ impl Drop for RawAppleEventDescriptor {
     }
 }
 
+/// Builds a four-character Apple event code in `OSType` form.
 pub const fn four_char_code(bytes: [u8; 4]) -> u32 {
     u32::from_be_bytes(bytes)
 }

@@ -1,10 +1,14 @@
 use std::{error::Error, fmt};
 
+/// Convenience result type for Scripting Bridge operations.
 pub type Result<T> = std::result::Result<T, ScriptingBridgeError>;
 
+/// Error returned when a Scripting Bridge bridge call fails.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ScriptingBridgeError {
+    /// Names the bridge function that reported the failure.
     pub function: &'static str,
+    /// Holds the failure message returned by the bridge.
     pub message: String,
 }
 

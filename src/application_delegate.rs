@@ -7,15 +7,22 @@ use crate::internal::bridge_error;
 use crate::Result;
 use doom_fish_utils::panic_safe::catch_user_panic;
 
+/// Carries an `SBApplicationDelegate` error callback payload.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ApplicationErrorEvent {
+    /// Holds the Apple event class reported by `SBApplicationDelegate`.
     pub event_class: u32,
+    /// Holds the Apple event ID reported by `SBApplicationDelegate`.
     pub event_id: u32,
+    /// Holds the `NSError` domain reported by `SBApplicationDelegate`.
     pub error_domain: String,
+    /// Holds the `NSError` code reported by `SBApplicationDelegate`.
     pub error_code: i64,
+    /// Holds the localized `NSError` message reported by `SBApplicationDelegate`.
     pub error_message: String,
 }
 
+/// Owns an `SBApplicationDelegate` callback bridge.
 #[derive(Debug)]
 pub struct ApplicationDelegate(NonNull<c_void>);
 
@@ -26,6 +33,7 @@ struct CallbackState {
 }
 
 impl ApplicationDelegate {
+    /// Creates an `SBApplicationDelegate` bridge from a Rust callback.
     pub fn new<F>(callback: F) -> Result<Self>
     where
         F: FnMut(&ApplicationErrorEvent) -> Option<AppleEventDescriptor> + Send + 'static,
@@ -102,7 +110,8 @@ unsafe extern "C" fn application_delegate_trampoline(
             error_message: c_string_from_ptr(error_message),
         };
 
-        result = (state.callback)(&event).map_or(std::ptr::null_mut(), AppleEventDescriptor::into_raw);
+        result =
+            (state.callback)(&event).map_or(std::ptr::null_mut(), AppleEventDescriptor::into_raw);
     });
     result
 }

@@ -8,30 +8,39 @@ use crate::ffi;
 use crate::internal::{c_string, optional_handle, required_handle, take_optional_c_string};
 use crate::Result;
 
+/// Describes an `SBObject` property assignment by name.
 #[derive(Clone, Copy, Debug)]
 pub struct Property<'a> {
+    /// Names the `SBObject` property to set.
     pub name: &'a str,
+    /// Holds the `NSAppleEventDescriptor` value to assign.
     pub value: &'a AppleEventDescriptor,
 }
 
 impl<'a> Property<'a> {
+    /// Creates an `SBObject` property assignment descriptor.
     pub const fn new(name: &'a str, value: &'a AppleEventDescriptor) -> Self {
         Self { name, value }
     }
 }
 
+/// Describes an Apple event parameter for `SBObject` or `SBApplication`.
 #[derive(Clone, Copy, Debug)]
 pub struct EventParameter<'a> {
+    /// Holds the Apple event parameter keyword or code.
     pub code: DescType,
+    /// Holds the `NSAppleEventDescriptor` value for the parameter.
     pub value: &'a AppleEventDescriptor,
 }
 
 impl<'a> EventParameter<'a> {
+    /// Creates an Apple event parameter descriptor.
     pub const fn new(code: DescType, value: &'a AppleEventDescriptor) -> Self {
         Self { code, value }
     }
 }
 
+/// Wraps an `SBObject` instance.
 #[derive(Debug)]
 pub struct ScriptObject(pub(crate) NonNull<c_void>);
 
@@ -42,6 +51,7 @@ struct PropertyBuffers {
 }
 
 impl ScriptObject {
+    /// Creates a new empty `SBObject`.
     pub fn new() -> Result<Self> {
         let mut error = std::ptr::null_mut();
         // SAFETY: We're calling a C++ bridge function that creates a new SBObject.
@@ -51,6 +61,7 @@ impl ScriptObject {
         required_handle(raw, "sb_object_create", error, Self)
     }
 
+    /// Creates an `SBObject` initialized with named properties.
     pub fn with_properties(properties: &[Property<'_>]) -> Result<Self> {
         let buffers = property_buffers(properties, "sb_object_create_with_properties")?;
         let count = i64::try_from(properties.len()).map_err(|_| {
@@ -80,6 +91,7 @@ impl ScriptObject {
         )
     }
 
+    /// Creates an `SBObject` from an `NSAppleEventDescriptor` data payload.
     pub fn with_data(data: &AppleEventDescriptor) -> Result<Self> {
         let mut error = std::ptr::null_mut();
         // SAFETY: data.as_ptr() returns a valid non-null pointer to the underlying
@@ -89,6 +101,7 @@ impl ScriptObject {
         required_handle(raw, "sb_object_create_with_data", error, Self::from_raw)
     }
 
+    /// Creates an `SBObject` for an element code, optional data, and properties.
     pub fn with_element_code(
         element_code: DescType,
         properties: &[Property<'_>],
@@ -120,6 +133,7 @@ impl ScriptObject {
         )
     }
 
+    /// Resolves this `SBObject` and returns its descriptor value.
     pub fn get(&self) -> Result<Option<AppleEventDescriptor>> {
         let mut error = std::ptr::null_mut();
         // SAFETY: self.0 is a valid non-null pointer to an SBObject from our construction.
@@ -127,24 +141,28 @@ impl ScriptObject {
         optional_handle(raw, "sb_object_get", error, AppleEventDescriptor::from_raw)
     }
 
+    /// Returns the `SBObject` description string.
     pub fn description(&self) -> Option<String> {
         // SAFETY: self.0 is a valid non-null pointer to an SBObject.
         let raw = unsafe { ffi::object::sb_object_description(self.0.as_ptr()) };
         take_optional_c_string(raw)
     }
 
+    /// Returns the description of the value resolved by `SBObject::get`.
     pub fn get_description(&self) -> Option<String> {
         // SAFETY: self.0 is a valid non-null pointer to an SBObject.
         let raw = unsafe { ffi::object::sb_object_get_description(self.0.as_ptr()) };
         take_optional_c_string(raw)
     }
 
+    /// Returns the last error description reported by `SBObject`.
     pub fn last_error_description(&self) -> Option<String> {
         // SAFETY: self.0 is a valid non-null pointer to an SBObject.
         let raw = unsafe { ffi::object::sb_object_last_error_description(self.0.as_ptr()) };
         take_optional_c_string(raw)
     }
 
+    /// Looks up an `SBObject` property by four-character code.
     pub fn property_with_code(&self, code: DescType) -> Result<Option<Self>> {
         let mut error = std::ptr::null_mut();
         // SAFETY: self.0 is a valid non-null SBObject pointer. code is a DescType (u32) value.
@@ -153,6 +171,7 @@ impl ScriptObject {
         optional_handle(raw, "sb_object_property_with_code", error, Self::from_raw)
     }
 
+    /// Looks up an `SBObject` property by scripting class and four-character code.
     pub fn property_with_class(
         &self,
         class: &ScriptingClass,
@@ -172,6 +191,7 @@ impl ScriptObject {
         optional_handle(raw, "sb_object_property_with_class", error, Self::from_raw)
     }
 
+    /// Looks up an `SBElementArray` child collection by four-character code.
     pub fn element_array_with_code(&self, code: DescType) -> Result<Option<ElementArray>> {
         let mut error = std::ptr::null_mut();
         // SAFETY: self.0 is a valid non-null SBObject pointer.
@@ -186,6 +206,7 @@ impl ScriptObject {
         )
     }
 
+    /// Sends a raw Apple event through this `SBObject`.
     pub fn send_event(
         &self,
         event_class: AEEventClass,
@@ -223,6 +244,7 @@ impl ScriptObject {
         )
     }
 
+    /// Sets this `SBObject` to the supplied descriptor value.
     pub fn set_to(&self, value: Option<&AppleEventDescriptor>) -> Result<()> {
         let mut error = std::ptr::null_mut();
         // SAFETY: self.0 is a valid non-null SBObject pointer. If value is Some, we pass

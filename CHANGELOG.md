@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1] - 2026-05-18
+
+### Changed
+
+- Added concise rustdoc comments across the public Scripting Bridge API outside the ffi layer.
+
 ## [0.3.0] - 2026-05-18
 
 ### Changed

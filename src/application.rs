@@ -9,16 +9,21 @@ use crate::internal::{bool_result, c_string, optional_handle, required_handle, t
 use crate::object::{EventParameter, ScriptObject};
 use crate::Result;
 
+/// Mirrors the `NSWorkspaceLaunchOptions` bitfield used by `SBApplication`.
 pub type LaunchFlags = u32;
+/// Mirrors the `AESendMode` bitfield used by `SBApplication`.
 pub type SendMode = i32;
 
+/// Wraps an `SBApplication` instance.
 #[derive(Debug)]
 pub struct Application(NonNull<c_void>);
 
+/// Wraps an Objective-C class returned by `SBApplication`.
 #[derive(Debug)]
 pub struct ScriptingClass(NonNull<c_void>);
 
 impl Application {
+    /// Creates an `SBApplication` from a bundle identifier.
     pub fn with_bundle_identifier(bundle_identifier: &str) -> Result<Self> {
         create_application(
             bundle_identifier,
@@ -32,6 +37,7 @@ impl Application {
         )
     }
 
+    /// Creates an `SBApplication` from an application URL.
     pub fn with_url(url: &str) -> Result<Self> {
         create_application(
             url,
@@ -42,6 +48,7 @@ impl Application {
         )
     }
 
+    /// Creates an `SBApplication` from a process identifier.
     pub fn with_process_identifier(process_identifier: i32) -> Result<Self> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -58,6 +65,7 @@ impl Application {
         )
     }
 
+    /// Returns the shared `SBApplication` for a bundle identifier.
     pub fn shared_with_bundle_identifier(bundle_identifier: &str) -> Result<Self> {
         create_application(
             bundle_identifier,
@@ -71,6 +79,7 @@ impl Application {
         )
     }
 
+    /// Returns the shared `SBApplication` for an application URL.
     pub fn shared_with_url(url: &str) -> Result<Self> {
         create_application(
             url,
@@ -81,6 +90,7 @@ impl Application {
         )
     }
 
+    /// Returns the shared `SBApplication` for a process identifier.
     pub fn shared_with_process_identifier(process_identifier: i32) -> Result<Self> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -97,6 +107,7 @@ impl Application {
         )
     }
 
+    /// Returns this `SBApplication` as its underlying `SBObject`.
     pub fn as_object(&self) -> Result<ScriptObject> {
         let raw = unsafe { ffi::application::sb_application_copy_object(self.0.as_ptr()) };
         required_handle(
@@ -107,6 +118,7 @@ impl Application {
         )
     }
 
+    /// Looks up a scripting class through `SBApplication`.
     pub fn class_for_scripting_class(&self, class_name: &str) -> Result<Option<ScriptingClass>> {
         let class_name = c_string(class_name, "sb_application_class_for_scripting_class")?;
         let mut error = std::ptr::null_mut();
@@ -125,44 +137,52 @@ impl Application {
         )
     }
 
+    /// Returns whether the target `SBApplication` is running.
     pub fn is_running(&self) -> bool {
         unsafe { ffi::application::sb_application_is_running(self.0.as_ptr()) }
     }
 
+    /// Returns the process identifier tracked by `SBApplication`.
     pub fn process_identifier(&self) -> Option<i32> {
         let process_identifier =
             unsafe { ffi::application::sb_application_process_identifier(self.0.as_ptr()) };
         (process_identifier >= 0).then_some(process_identifier)
     }
 
+    /// Launches the target `SBApplication`.
     pub fn launch(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe { ffi::application::sb_application_launch(self.0.as_ptr(), &mut error) };
         bool_result(ok, "sb_application_launch", error)
     }
 
+    /// Activates the target `SBApplication`.
     pub fn activate(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe { ffi::application::sb_application_activate(self.0.as_ptr(), &mut error) };
         bool_result(ok, "sb_application_activate", error)
     }
 
+    /// Quits the target `SBApplication`.
     pub fn quit(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe { ffi::application::sb_application_quit(self.0.as_ptr(), &mut error) };
         bool_result(ok, "sb_application_quit", error)
     }
 
+    /// Terminates the target `SBApplication`.
     pub fn terminate(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe { ffi::application::sb_application_terminate(self.0.as_ptr(), &mut error) };
         bool_result(ok, "sb_application_terminate", error)
     }
 
+    /// Returns the launch flags configured on `SBApplication`.
     pub fn launch_flags(&self) -> LaunchFlags {
         unsafe { ffi::application::sb_application_get_launch_flags(self.0.as_ptr()) }
     }
 
+    /// Sets the launch flags used by `SBApplication`.
     pub fn set_launch_flags(&self, launch_flags: LaunchFlags) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe {
@@ -175,10 +195,12 @@ impl Application {
         bool_result(ok, "sb_application_set_launch_flags", error)
     }
 
+    /// Returns the Apple event send mode configured on `SBApplication`.
     pub fn send_mode(&self) -> SendMode {
         unsafe { ffi::application::sb_application_get_send_mode(self.0.as_ptr()) }
     }
 
+    /// Sets the Apple event send mode used by `SBApplication`.
     pub fn set_send_mode(&self, send_mode: SendMode) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe {
@@ -187,10 +209,12 @@ impl Application {
         bool_result(ok, "sb_application_set_send_mode", error)
     }
 
+    /// Returns the Apple event timeout configured on `SBApplication`.
     pub fn timeout(&self) -> i64 {
         unsafe { ffi::application::sb_application_get_timeout(self.0.as_ptr()) }
     }
 
+    /// Sets the Apple event timeout used by `SBApplication`.
     pub fn set_timeout(&self, timeout: i64) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe {
@@ -199,6 +223,7 @@ impl Application {
         bool_result(ok, "sb_application_set_timeout", error)
     }
 
+    /// Attaches or clears the `SBApplicationDelegate` bridge for this `SBApplication`.
     pub fn set_delegate(&self, delegate: Option<&ApplicationDelegate>) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe {
@@ -211,10 +236,12 @@ impl Application {
         bool_result(ok, "sb_application_set_delegate", error)
     }
 
+    /// Returns whether this `SBApplication` currently has a delegate.
     pub fn has_delegate(&self) -> bool {
         unsafe { ffi::application::sb_application_has_delegate(self.0.as_ptr()) }
     }
 
+    /// Sends a simple command string through this `SBApplication`.
     pub fn tell(&self, command: &str, args: &[&str]) -> Result<Option<String>> {
         if args.len() > 1 {
             return Err(crate::ScriptingBridgeError::new(
@@ -251,6 +278,7 @@ impl Application {
         }
     }
 
+    /// Sends a raw Apple event through this `SBApplication`.
     pub fn send_event(
         &self,
         event_class: AEEventClass,
@@ -285,6 +313,7 @@ impl Application {
         )
     }
 
+    /// Resolves an `SBObject` key path through this `SBApplication`.
     pub fn object_for_key_path(&self, key_path: &str) -> Result<Option<ScriptObject>> {
         let key_path = c_string(key_path, "sb_application_object_for_key_path")?;
         let mut error = std::ptr::null_mut();
@@ -303,6 +332,7 @@ impl Application {
         )
     }
 
+    /// Resolves an `SBElementArray` key path through this `SBApplication`.
     pub fn element_array_for_key_path(&self, key_path: &str) -> Result<Option<ElementArray>> {
         let key_path = c_string(key_path, "sb_application_element_array_for_key_path")?;
         let mut error = std::ptr::null_mut();
@@ -323,6 +353,7 @@ impl Application {
 }
 
 impl ScriptingClass {
+    /// Returns the Objective-C class name wrapped by this `SBApplication` class handle.
     pub fn name(&self) -> Option<String> {
         let raw = unsafe { ffi::application::sb_scripting_class_name(self.0.as_ptr()) };
         crate::internal::take_optional_c_string(raw)

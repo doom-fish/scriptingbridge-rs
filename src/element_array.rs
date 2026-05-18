@@ -7,10 +7,12 @@ use crate::internal::{c_string, optional_handle, take_optional_c_string};
 use crate::object::ScriptObject;
 use crate::Result;
 
+/// Wraps an `SBElementArray` instance.
 #[derive(Debug)]
 pub struct ElementArray(pub(crate) NonNull<c_void>);
 
 impl ElementArray {
+    /// Looks up an `SBObject` by name through `SBElementArray`.
     pub fn object_with_name(&self, name: &str) -> Result<Option<ScriptObject>> {
         let name = c_string(name, "sb_element_array_object_with_name")?;
         let mut error = std::ptr::null_mut();
@@ -29,6 +31,7 @@ impl ElementArray {
         )
     }
 
+    /// Looks up an `SBObject` by identifier through `SBElementArray`.
     pub fn object_with_id(
         &self,
         identifier: &AppleEventDescriptor,
@@ -49,6 +52,7 @@ impl ElementArray {
         )
     }
 
+    /// Looks up an `SBObject` by location descriptor through `SBElementArray`.
     pub fn object_at_location(
         &self,
         location: &AppleEventDescriptor,
@@ -69,6 +73,7 @@ impl ElementArray {
         )
     }
 
+    /// Applies a selector across `SBElementArray` and returns raw descriptor results.
     pub fn array_by_applying_selector(
         &self,
         selector: &str,
@@ -90,6 +95,7 @@ impl ElementArray {
         )
     }
 
+    /// Applies a selector with one argument across `SBElementArray`.
     pub fn array_by_applying_selector_with_object(
         &self,
         selector: &str,
@@ -116,6 +122,7 @@ impl ElementArray {
         )
     }
 
+    /// Resolves this `SBElementArray` to an `NSAppleEventDescriptor`.
     pub fn get(&self) -> Result<Option<AppleEventDescriptor>> {
         let mut error = std::ptr::null_mut();
         let raw = unsafe { ffi::element_array::sb_element_array_get(self.0.as_ptr(), &mut error) };
@@ -127,11 +134,13 @@ impl ElementArray {
         )
     }
 
+    /// Returns the `SBElementArray` description string.
     pub fn description(&self) -> Option<String> {
         let raw = unsafe { ffi::element_array::sb_element_array_description(self.0.as_ptr()) };
         take_optional_c_string(raw)
     }
 
+    /// Returns the description of the value resolved by `SBElementArray::get`.
     pub fn get_description(&self) -> Option<String> {
         let raw = unsafe { ffi::element_array::sb_element_array_get_description(self.0.as_ptr()) };
         take_optional_c_string(raw)
