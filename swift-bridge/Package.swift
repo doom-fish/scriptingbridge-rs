@@ -15,7 +15,6 @@ let package = Package(
     targets: [
         .target(
             name: "ScriptingBridgeBridge",
-            path: "Sources/ScriptingBridgeBridge",
-            publicHeadersPath: "include")
+            path: "Sources/ScriptingBridgeBridge")
     ]
 )
