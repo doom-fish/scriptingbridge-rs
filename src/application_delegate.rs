@@ -118,12 +118,18 @@ unsafe extern "C" fn application_delegate_trampoline(
 
 unsafe extern "C" fn application_delegate_drop_trampoline(context: *mut c_void) {
     if let Some(context) = NonNull::new(context) {
-        // SAFETY: context is guaranteed to be a valid, non-null CallbackState pointer that
-        // we leaked via Box::into_raw in ApplicationDelegate::new. We only drop it once
-        // (the Swift bridge calls this exactly once per delegate), so there's no double-free.
-        // No other code holds a reference to the CallbackState because it was leaked
-        // exclusively for the bridge.
-        unsafe { drop(Box::from_raw(context.cast::<CallbackState>().as_ptr())) };
+        // The drop trampoline runs from the Swift delegate's `deinit` across the C ABI.
+        // Dropping the user-provided closure can run arbitrary user `Drop` code, which may
+        // panic; an unwind across `extern "C"` into Swift is undefined behaviour, so the
+        // drop is wrapped in `catch_user_panic`.
+        catch_user_panic("ApplicationDelegate::drop", || {
+            // SAFETY: context is guaranteed to be a valid, non-null CallbackState pointer that
+            // we leaked via Box::into_raw in ApplicationDelegate::new. We only drop it once
+            // (the Swift bridge calls this exactly once per delegate), so there's no double-free.
+            // No other code holds a reference to the CallbackState because it was leaked
+            // exclusively for the bridge.
+            unsafe { drop(Box::from_raw(context.cast::<CallbackState>().as_ptr())) };
+        });
     }
 }
 
