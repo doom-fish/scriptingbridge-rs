@@ -11,25 +11,27 @@ public typealias SBRSApplicationDelegateCallback = @convention(c) (
   UnsafePointer<CChar>?
 ) -> UnsafeMutableRawPointer?
 
-public typealias SBRSApplicationDelegateDropContext = @convention(c) (UnsafeMutableRawPointer?) -> Void
+public typealias SBRSApplicationDelegateContextHook = @convention(c) (UnsafeMutableRawPointer?) -> Void
 
 final class SBRSApplicationDelegateHandle: NSObject, SBApplicationDelegate {
   let context: UnsafeMutableRawPointer?
   let callback: SBRSApplicationDelegateCallback
-  let dropContext: SBRSApplicationDelegateDropContext
+  let releaseContext: SBRSApplicationDelegateContextHook
 
   init(
     context: UnsafeMutableRawPointer?,
     callback: @escaping SBRSApplicationDelegateCallback,
-    dropContext: @escaping SBRSApplicationDelegateDropContext
+    retainContext: SBRSApplicationDelegateContextHook,
+    releaseContext: @escaping SBRSApplicationDelegateContextHook
   ) {
     self.context = context
     self.callback = callback
-    self.dropContext = dropContext
+    self.releaseContext = releaseContext
+    retainContext(context)
   }
 
   deinit {
-    dropContext(context)
+    releaseContext(context)
   }
 
   func eventDidFail(_ event: UnsafePointer<AppleEvent>, withError error: Error) -> Any? {
@@ -64,15 +66,16 @@ final class SBRSApplicationDelegateHandle: NSObject, SBApplicationDelegate {
 public func sb_application_delegate_create(
   _ context: UnsafeMutableRawPointer?,
   _ callback: SBRSApplicationDelegateCallback?,
-  _ dropContext: SBRSApplicationDelegateDropContext?,
+  _ retainContext: SBRSApplicationDelegateContextHook?,
+  _ releaseContext: SBRSApplicationDelegateContextHook?,
   _ errorOut: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
 ) -> UnsafeMutableRawPointer? {
   guard let callback else {
     sbSetError(errorOut, "missing application delegate callback")
     return nil
   }
-  guard let dropContext else {
-    sbSetError(errorOut, "missing application delegate drop callback")
+  guard let retainContext, let releaseContext else {
+    sbSetError(errorOut, "missing application delegate context retain or release callback")
     return nil
   }
 
@@ -80,7 +83,8 @@ public func sb_application_delegate_create(
     SBRSApplicationDelegateHandle(
       context: context,
       callback: callback,
-      dropContext: dropContext))
+      retainContext: retainContext,
+      releaseContext: releaseContext))
 }
 
 @_cdecl("sb_application_delegate_release")
