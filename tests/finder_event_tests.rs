@@ -62,6 +62,7 @@ fn sint64(descriptor: &AppleEventDescriptor) -> i64 {
 }
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn failed_events_become_errors_with_the_default_delegate() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());
@@ -74,6 +75,7 @@ fn failed_events_become_errors_with_the_default_delegate() -> Result<()> {
 }
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn a_user_delegate_can_supply_a_full_width_replacement_value() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());
@@ -100,6 +102,7 @@ fn a_user_delegate_can_supply_a_full_width_replacement_value() -> Result<()> {
 }
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn a_user_delegate_without_a_replacement_still_reports_the_error() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());
@@ -122,6 +125,7 @@ fn a_user_delegate_without_a_replacement_still_reports_the_error() -> Result<()>
 }
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn send_event_passes_variadic_parameters() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());
@@ -153,6 +157,7 @@ fn send_event_passes_variadic_parameters() -> Result<()> {
 }
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn numbers_keep_their_full_width() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());
@@ -175,6 +180,7 @@ fn numbers_keep_their_full_width() -> Result<()> {
 }
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn records_with_name_keys_become_user_fields() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());
@@ -202,6 +208,7 @@ fn records_with_name_keys_become_user_fields() -> Result<()> {
 }
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn void_commands_run_and_report_event_errors() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());

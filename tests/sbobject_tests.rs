@@ -3,6 +3,7 @@ mod common;
 use scriptingbridge::{four_char_code, AppleEventDescriptor, Property, Result, ScriptObject};
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn sbobject_creation_and_property_access_smoke() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());

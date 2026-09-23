@@ -3,6 +3,7 @@ mod common;
 use scriptingbridge::{AppleEventDescriptor, Result};
 
 #[test]
+#[ignore = "sends Apple Events to Finder"]
 fn sbelementarray_finder_disks_queries_smoke() -> Result<()> {
     let Some(application) = common::running_finder_application() else {
         return Ok(());
