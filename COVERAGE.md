@@ -1,6 +1,8 @@
 # Coverage
 
-Scope audited for `0.2.0`:
+Scope audited for `0.2.0`; rows updated for `0.4.0`. "Implemented" means the
+declaration is reachable from safe Rust, not that the Rust API is equivalent:
+the notes list where it deliberately differs.
 
 - `ScriptingBridge.framework/Headers/SBApplication.h`
 - `ScriptingBridge.framework/Headers/SBObject.h`
@@ -20,8 +22,8 @@ Scope audited for `0.2.0`:
 | `applicationWithProcessIdentifier:` | ✅ implemented | `Application::shared_with_process_identifier` |
 | `classForScriptingClass:` | ✅ implemented | `Application::class_for_scripting_class` |
 | `running` | ✅ implemented | `Application::is_running` |
-| `activate` | ✅ implemented | `Application::activate` |
-| `delegate` | ✅ implemented | `Application::set_delegate` / `has_delegate` |
+| `activate` | ✅ implemented | `Application::activate`; a failed event is an error |
+| `delegate` | ✅ implemented | `Application::set_delegate` / `has_delegate`; a default delegate is always installed so failed events become errors, and `has_delegate` reports only delegates set through this crate |
 | `launchFlags` | ✅ implemented | `launch_flags` / `set_launch_flags` |
 | `sendMode` | ✅ implemented | `send_mode` / `set_send_mode` |
 | `timeout` | ✅ implemented | `timeout` / `set_timeout` |
@@ -30,7 +32,7 @@ Scope audited for `0.2.0`:
 
 | API | Status | Notes |
 | --- | --- | --- |
-| `eventDidFail:withError:` | ✅ implemented | `ApplicationDelegate::new` callback bridge |
+| `eventDidFail:withError:` | ✅ implemented | `ApplicationDelegate::new` callback bridge; `None` keeps the error, `Some` replaces the result |
 
 ## SBObject (`SBObject.h`)
 
@@ -39,13 +41,13 @@ Scope audited for `0.2.0`:
 | `init` | ✅ implemented | `ScriptObject::new` |
 | `initWithProperties:` | ✅ implemented | `ScriptObject::with_properties` |
 | `initWithData:` | ✅ implemented | `ScriptObject::with_data` |
-| `get` | ✅ implemented | `ScriptObject::get` |
+| `get` | ✅ implemented | `ScriptObject::get`; failed events and exceptions (for example on a standalone object) are errors |
 | `lastError` | ✅ implemented | `last_error_description` |
 | `initWithElementCode:properties:data:` | ✅ implemented | `ScriptObject::with_element_code` |
 | `propertyWithCode:` | ✅ implemented | `property_with_code` |
 | `propertyWithClass:code:` | ✅ implemented | `property_with_class` |
 | `elementArrayWithCode:` | ✅ implemented | `element_array_with_code` |
-| `sendEvent:id:parameters:` | ✅ implemented | `send_event` |
+| `sendEvent:id:parameters:` | ✅ implemented | `send_event`, up to 8 parameters through a variadic Objective-C call |
 | `setTo:` | ✅ implemented | `set_to` |
 
 ## SBElementArray (`SBElementArray.h`)
@@ -55,8 +57,8 @@ Scope audited for `0.2.0`:
 | `objectWithName:` | ✅ implemented | `object_with_name` |
 | `objectWithID:` | ✅ implemented | `object_with_id` |
 | `objectAtLocation:` | ✅ implemented | `object_at_location` |
-| `arrayByApplyingSelector:` | ✅ implemented | `array_by_applying_selector` |
-| `arrayByApplyingSelector:withObject:` | ✅ implemented | `array_by_applying_selector_with_object` |
+| `arrayByApplyingSelector:` | ✅ implemented | `array_by_applying_selector`; validated, object-returning selectors only (see README) |
+| `arrayByApplyingSelector:withObject:` | ✅ implemented | `array_by_applying_selector_with_object`; validated, object-returning selectors only, and `valueForKey:` keys are checked |
 | `get` | ✅ implemented | `ElementArray::get` |
 
 ## NSAppleEventDescriptor (`NSAppleEventDescriptor.h`)
@@ -134,5 +136,5 @@ Scope audited for `0.2.0`:
 | `source` | ✅ implemented | `AppleScript::source` |
 | `compiled` | ✅ implemented | `AppleScript::is_compiled` |
 | `compileAndReturnError:` | ✅ implemented | `AppleScript::compile` |
-| `executeAndReturnError:` | ✅ implemented | `AppleScript::execute` |
+| `executeAndReturnError:` | ✅ implemented | `AppleScript::execute`; Apple documents `NSAppleScript` as main-thread only, which the crate does not enforce |
 | `executeAppleEvent:error:` | ✅ implemented | `AppleScript::execute_apple_event` |

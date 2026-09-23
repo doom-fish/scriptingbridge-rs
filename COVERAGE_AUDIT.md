@@ -1,5 +1,7 @@
 # scriptingbridge-rs coverage audit (vs MacOSX26.2.sdk)
 
+> **What these numbers measure (checked for 0.4.0):** each of the 35 public declarations in `SBApplication.h`, `SBObject.h` and `SBElementArray.h` is reachable from safe Rust. The audit was generated against MacOSX26.2.sdk and not re-run against SDK 26.5 or 27.0. It does not mean semantic equivalence: `tell` and `array_by_applying_selector*` accept only validated selectors, `send_event` takes at most 8 parameters, results come back as `NSAppleEventDescriptor`s (with `SBObject` values inside results reduced to their description strings), and a default delegate is always installed so failed events become errors.
+
 SDK_PUBLIC_SYMBOLS: 35
 VERIFIED: 35
 GAPS: 0
