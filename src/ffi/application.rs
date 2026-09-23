@@ -68,6 +68,10 @@ unsafe extern "C" {
         error_out: *mut *mut c_char,
     ) -> bool;
     pub fn sb_application_has_delegate(handle: *mut c_void) -> bool;
+    pub fn sb_application_automation_permission(
+        handle: *mut c_void,
+        ask_user_if_needed: bool,
+    ) -> i32;
 
     pub fn sb_application_tell(
         handle: *mut c_void,

@@ -42,7 +42,7 @@ pub use apple_script::{
     APPLE_SCRIPT_ERROR_MESSAGE_KEY, APPLE_SCRIPT_ERROR_NUMBER_KEY, APPLE_SCRIPT_ERROR_RANGE_KEY,
 };
 /// Re-exports `SBApplication` handle and class wrappers.
-pub use application::{Application, LaunchFlags, ScriptingClass, SendMode};
+pub use application::{Application, AutomationPermission, LaunchFlags, ScriptingClass, SendMode};
 /// Re-exports the `SBApplicationDelegate` callback bridge types.
 pub use application_delegate::{ApplicationDelegate, ApplicationErrorEvent};
 /// Re-exports the `SBElementArray` wrapper.

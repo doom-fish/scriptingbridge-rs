@@ -535,6 +535,33 @@ public func sb_application_has_delegate(_ rawHandle: UnsafeMutableRawPointer?) -
   return !(delegate is SBRSDefaultApplicationDelegate)
 }
 
+@_cdecl("sb_application_automation_permission")
+public func sb_application_automation_permission(
+  _ rawHandle: UnsafeMutableRawPointer?,
+  _ askUserIfNeeded: Bool
+) -> Int32 {
+  guard let rawHandle else {
+    return Int32(paramErr)
+  }
+
+  let handle: SBRSApplicationHandle = sbBorrow(rawHandle)
+  let target: NSAppleEventDescriptor
+  if let processIdentifier = sbRunningApplication(for: handle)?.processIdentifier {
+    target = NSAppleEventDescriptor(processIdentifier: processIdentifier)
+  } else if let bundleIdentifier = handle.bundleIdentifier
+    ?? sbApplicationURL(for: handle).flatMap({ Bundle(url: $0)?.bundleIdentifier })
+  {
+    target = NSAppleEventDescriptor(bundleIdentifier: bundleIdentifier)
+  } else {
+    return Int32(procNotFound)
+  }
+
+  guard let aeDesc = target.aeDesc else {
+    return Int32(paramErr)
+  }
+  return AEDeterminePermissionToAutomateTarget(aeDesc, typeWildCard, typeWildCard, askUserIfNeeded)
+}
+
 @_cdecl("sb_application_tell")
 public func sb_application_tell(
   _ rawHandle: UnsafeMutableRawPointer?,

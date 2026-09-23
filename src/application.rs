@@ -23,6 +23,28 @@ pub struct Application(NonNull<c_void>);
 #[derive(Debug)]
 pub struct ScriptingClass(NonNull<c_void>);
 
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[non_exhaustive]
+pub enum AutomationPermission {
+    Granted,
+    Denied,
+    RequiresConsent,
+    TargetNotRunning,
+    Other(i32),
+}
+
+impl AutomationPermission {
+    const fn from_status(status: i32) -> Self {
+        match status {
+            0 => Self::Granted,
+            -1743 => Self::Denied,
+            -1744 => Self::RequiresConsent,
+            -600 => Self::TargetNotRunning,
+            other => Self::Other(other),
+        }
+    }
+}
+
 impl Application {
     /// Creates an `SBApplication` from a bundle identifier.
     pub fn with_bundle_identifier(bundle_identifier: &str) -> Result<Self> {
@@ -247,6 +269,15 @@ impl Application {
     /// Returns whether this `SBApplication` currently has a delegate.
     pub fn has_delegate(&self) -> bool {
         unsafe { ffi::application::sb_application_has_delegate(self.0.as_ptr()) }
+    }
+
+    pub fn automation_permission(&self, ask_user_if_needed: bool) -> AutomationPermission {
+        AutomationPermission::from_status(unsafe {
+            ffi::application::sb_application_automation_permission(
+                self.0.as_ptr(),
+                ask_user_if_needed,
+            )
+        })
     }
 
     /// Sends a simple command string through this `SBApplication`.
