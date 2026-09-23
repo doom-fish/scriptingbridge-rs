@@ -325,10 +325,10 @@ public func sb_application_launch(
   configuration.createsNewApplicationInstance = (launchFlags & sbLSLaunchNewInstance) != 0
 
   // The launch outcome is captured in a Swift-owned, lock-guarded box rather than
-  // written into `errorOut` from inside the Task. `errorOut` points into the calling
-  // Rust frame's stack; if the launch exceeds the timeout below this function returns
-  // and that stack slot is reclaimed, so a later write from the still-running Task
-  // would be a use-after-free. Only the calling thread touches `errorOut`.
+  // written into `errorOut` from inside the completion handler. `errorOut` points into
+  // the calling Rust frame's stack; if the launch exceeds the timeout below this function
+  // returns and that stack slot is reclaimed, so a later write from the still-pending
+  // handler would be a use-after-free. Only the calling thread touches `errorOut`.
   final class LaunchOutcome {
     let lock = NSLock()
     var didLaunch = false
@@ -336,18 +336,14 @@ public func sb_application_launch(
   }
   let outcome = LaunchOutcome()
   let semaphore = DispatchSemaphore(value: 0)
-  Task {
-    do {
-      _ = try await NSWorkspace.shared.openApplication(at: url, configuration: configuration)
-      outcome.lock.lock()
+  NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, error in
+    outcome.lock.lock()
+    if let error {
+      outcome.errorMessage = sbNSErrorMessage(error as NSError)
+    } else {
       outcome.didLaunch = true
-      outcome.lock.unlock()
-    } catch {
-      let message = sbNSErrorMessage(error as NSError)
-      outcome.lock.lock()
-      outcome.errorMessage = message
-      outcome.lock.unlock()
     }
+    outcome.lock.unlock()
     semaphore.signal()
   }
 
