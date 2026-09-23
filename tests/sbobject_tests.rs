@@ -4,7 +4,9 @@ use scriptingbridge::{four_char_code, AppleEventDescriptor, Property, Result, Sc
 
 #[test]
 fn sbobject_creation_and_property_access_smoke() -> Result<()> {
-    let application = common::running_finder_application()?;
+    let Some(application) = common::running_finder_application() else {
+        return Ok(());
+    };
     let app_object = application.as_object()?;
     assert!(app_object.description().is_some());
 

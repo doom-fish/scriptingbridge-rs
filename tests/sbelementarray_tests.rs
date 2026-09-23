@@ -4,7 +4,9 @@ use scriptingbridge::{AppleEventDescriptor, Result};
 
 #[test]
 fn sbelementarray_finder_disks_queries_smoke() -> Result<()> {
-    let application = common::running_finder_application()?;
+    let Some(application) = common::running_finder_application() else {
+        return Ok(());
+    };
     let disks = application
         .element_array_for_key_path("disks")?
         .expect("Finder should expose a disks array");
