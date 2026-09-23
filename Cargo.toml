@@ -9,7 +9,7 @@ description = "Safe Rust bindings for Apple's ScriptingBridge framework plus App
 authors = ["Per Johansson <per@doom.fish>"]
 keywords = ["scriptingbridge", "macos", "applescript", "automation", "apple"]
 categories = ["api-bindings", "os::macos-apis"]
-rust-version = "1.76"
+rust-version = "1.82"
 readme = "README.md"
 build = "build.rs"
 include = [
@@ -40,8 +40,8 @@ crate-type = ["lib"]
 default = []
 
 [dependencies]
-apple-cf = { path = "../apple-cf-rs", version = ">=0.9, <0.10", default-features = false }
-doom-fish-utils = { path = "../doom-fish-utils", version = ">=0.1, <0.4" }
+apple-cf = { path = "../apple-cf-rs", version = ">=0.11, <0.12", default-features = false }
+doom-fish-utils = { path = "../doom-fish-utils", version = ">=0.4.1, <0.5" }
 
 [package.metadata.docs.rs]
 all-features = true
