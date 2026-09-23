@@ -20,7 +20,7 @@ impl ElementArray {
             ffi::element_array::sb_element_array_object_with_name(
                 self.0.as_ptr(),
                 name.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -41,7 +41,7 @@ impl ElementArray {
             ffi::element_array::sb_element_array_object_with_id(
                 self.0.as_ptr(),
                 identifier.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -62,7 +62,7 @@ impl ElementArray {
             ffi::element_array::sb_element_array_object_at_location(
                 self.0.as_ptr(),
                 location.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -84,7 +84,7 @@ impl ElementArray {
             ffi::element_array::sb_element_array_array_by_applying_selector(
                 self.0.as_ptr(),
                 selector.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -111,7 +111,7 @@ impl ElementArray {
                 self.0.as_ptr(),
                 selector.as_ptr(),
                 argument.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -125,7 +125,8 @@ impl ElementArray {
     /// Resolves this `SBElementArray` to an `NSAppleEventDescriptor`.
     pub fn get(&self) -> Result<Option<AppleEventDescriptor>> {
         let mut error = std::ptr::null_mut();
-        let raw = unsafe { ffi::element_array::sb_element_array_get(self.0.as_ptr(), &mut error) };
+        let raw =
+            unsafe { ffi::element_array::sb_element_array_get(self.0.as_ptr(), &raw mut error) };
         optional_handle(
             raw,
             "sb_element_array_get",

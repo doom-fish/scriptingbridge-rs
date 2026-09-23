@@ -54,7 +54,7 @@ impl Application {
         let raw = unsafe {
             ffi::application::sb_application_create_with_process_identifier(
                 process_identifier,
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -96,7 +96,7 @@ impl Application {
         let raw = unsafe {
             ffi::application::sb_application_shared_with_process_identifier(
                 process_identifier,
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -126,7 +126,7 @@ impl Application {
             ffi::application::sb_application_class_for_scripting_class(
                 self.0.as_ptr(),
                 class_name.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -152,28 +152,31 @@ impl Application {
     /// Launches the target `SBApplication`.
     pub fn launch(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
-        let ok = unsafe { ffi::application::sb_application_launch(self.0.as_ptr(), &mut error) };
+        let ok =
+            unsafe { ffi::application::sb_application_launch(self.0.as_ptr(), &raw mut error) };
         bool_result(ok, "sb_application_launch", error)
     }
 
     /// Activates the target `SBApplication`.
     pub fn activate(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
-        let ok = unsafe { ffi::application::sb_application_activate(self.0.as_ptr(), &mut error) };
+        let ok =
+            unsafe { ffi::application::sb_application_activate(self.0.as_ptr(), &raw mut error) };
         bool_result(ok, "sb_application_activate", error)
     }
 
     /// Quits the target `SBApplication`.
     pub fn quit(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
-        let ok = unsafe { ffi::application::sb_application_quit(self.0.as_ptr(), &mut error) };
+        let ok = unsafe { ffi::application::sb_application_quit(self.0.as_ptr(), &raw mut error) };
         bool_result(ok, "sb_application_quit", error)
     }
 
     /// Terminates the target `SBApplication`.
     pub fn terminate(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
-        let ok = unsafe { ffi::application::sb_application_terminate(self.0.as_ptr(), &mut error) };
+        let ok =
+            unsafe { ffi::application::sb_application_terminate(self.0.as_ptr(), &raw mut error) };
         bool_result(ok, "sb_application_terminate", error)
     }
 
@@ -189,7 +192,7 @@ impl Application {
             ffi::application::sb_application_set_launch_flags(
                 self.0.as_ptr(),
                 launch_flags,
-                &mut error,
+                &raw mut error,
             )
         };
         bool_result(ok, "sb_application_set_launch_flags", error)
@@ -204,7 +207,11 @@ impl Application {
     pub fn set_send_mode(&self, send_mode: SendMode) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe {
-            ffi::application::sb_application_set_send_mode(self.0.as_ptr(), send_mode, &mut error)
+            ffi::application::sb_application_set_send_mode(
+                self.0.as_ptr(),
+                send_mode,
+                &raw mut error,
+            )
         };
         bool_result(ok, "sb_application_set_send_mode", error)
     }
@@ -218,7 +225,7 @@ impl Application {
     pub fn set_timeout(&self, timeout: i64) -> Result<()> {
         let mut error = std::ptr::null_mut();
         let ok = unsafe {
-            ffi::application::sb_application_set_timeout(self.0.as_ptr(), timeout, &mut error)
+            ffi::application::sb_application_set_timeout(self.0.as_ptr(), timeout, &raw mut error)
         };
         bool_result(ok, "sb_application_set_timeout", error)
     }
@@ -230,7 +237,7 @@ impl Application {
             ffi::application::sb_application_set_delegate(
                 self.0.as_ptr(),
                 delegate.map_or(std::ptr::null_mut(), ApplicationDelegate::as_ptr),
-                &mut error,
+                &raw mut error,
             )
         };
         bool_result(ok, "sb_application_set_delegate", error)
@@ -263,7 +270,7 @@ impl Application {
                 argument
                     .as_ref()
                     .map_or(std::ptr::null(), |value| value.as_ptr()),
-                &mut error,
+                &raw mut error,
             )
         };
 
@@ -302,7 +309,7 @@ impl Application {
                 codes.as_ptr(),
                 values.as_ptr(),
                 count,
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -321,7 +328,7 @@ impl Application {
             ffi::application::sb_application_object_for_key_path(
                 self.0.as_ptr(),
                 key_path.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -340,7 +347,7 @@ impl Application {
             ffi::application::sb_application_element_array_for_key_path(
                 self.0.as_ptr(),
                 key_path.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -383,7 +390,7 @@ fn create_application(
 ) -> Result<Application> {
     let value = c_string(value, function)?;
     let mut error = std::ptr::null_mut();
-    let raw = create(&value, &mut error);
+    let raw = create(&value, &raw mut error);
     required_handle(raw, function, error, Application)
 }
 

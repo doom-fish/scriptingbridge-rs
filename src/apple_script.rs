@@ -29,7 +29,7 @@ impl AppleScript {
         let source = c_string(source, "sb_apple_script_create_with_source")?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
-            ffi::apple_script::sb_apple_script_create_with_source(source.as_ptr(), &mut error)
+            ffi::apple_script::sb_apple_script_create_with_source(source.as_ptr(), &raw mut error)
         };
         required_handle(
             raw,
@@ -46,7 +46,7 @@ impl AppleScript {
         let raw = unsafe {
             ffi::apple_script::sb_apple_script_create_with_contents_of_url(
                 path_or_url.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -71,7 +71,8 @@ impl AppleScript {
     /// Compiles this `NSAppleScript`.
     pub fn compile(&self) -> Result<()> {
         let mut error = std::ptr::null_mut();
-        let ok = unsafe { ffi::apple_script::sb_apple_script_compile(self.0.as_ptr(), &mut error) };
+        let ok =
+            unsafe { ffi::apple_script::sb_apple_script_compile(self.0.as_ptr(), &raw mut error) };
         bool_result(ok, "sb_apple_script_compile", error)
     }
 
@@ -79,7 +80,7 @@ impl AppleScript {
     pub fn execute(&self) -> Result<Option<AppleEventDescriptor>> {
         let mut error = std::ptr::null_mut();
         let raw =
-            unsafe { ffi::apple_script::sb_apple_script_execute(self.0.as_ptr(), &mut error) };
+            unsafe { ffi::apple_script::sb_apple_script_execute(self.0.as_ptr(), &raw mut error) };
         optional_handle(
             raw,
             "sb_apple_script_execute",
@@ -98,7 +99,7 @@ impl AppleScript {
             ffi::apple_script::sb_apple_script_execute_apple_event(
                 self.0.as_ptr(),
                 event.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(

@@ -210,7 +210,7 @@ impl AppleEventDescriptor {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_file_url(
                 value.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -237,7 +237,7 @@ impl AppleEventDescriptor {
                 target_descriptor.map_or(std::ptr::null_mut(), Self::as_ptr),
                 return_id,
                 transaction_id,
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -323,7 +323,7 @@ impl AppleEventDescriptor {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_application_url(
                 url.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -340,7 +340,7 @@ impl AppleEventDescriptor {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_copy_aedesc(
                 self.0.as_ptr(),
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -358,7 +358,7 @@ impl AppleEventDescriptor {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_create_with_aedesc_no_copy(
                 raw_descriptor,
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -382,7 +382,7 @@ impl AppleEventDescriptor {
         let raw = unsafe {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_copy_data(
                 self.0.as_ptr(),
-                &mut length,
+                &raw mut length,
             )
         };
         take_bytes(raw, usize::try_from(length).unwrap_or_default())
@@ -555,7 +555,7 @@ impl AppleEventDescriptor {
                 self.0.as_ptr(),
                 send_options,
                 timeout,
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -597,7 +597,7 @@ impl AppleEventDescriptor {
                 self.0.as_ptr(),
                 descriptor.0.as_ptr(),
                 index,
-                &mut error,
+                &raw mut error,
             )
         };
         bool_result(ok, "sb_apple_event_descriptor_insert_descriptor", error)
@@ -616,7 +616,7 @@ impl AppleEventDescriptor {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_descriptor_at_index(
                 self.0.as_ptr(),
                 index,
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -640,7 +640,7 @@ impl AppleEventDescriptor {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_remove_descriptor_at_index(
                 self.0.as_ptr(),
                 index,
-                &mut error,
+                &raw mut error,
             )
         };
         bool_result(
@@ -706,7 +706,7 @@ impl AppleEventDescriptor {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_keyword_for_descriptor_at_index(
                 self.0.as_ptr(),
                 index,
-                &mut error,
+                &raw mut error,
             )
         };
         if error.is_null() {
@@ -726,7 +726,7 @@ impl AppleEventDescriptor {
             ffi::apple_event_descriptor::sb_apple_event_descriptor_coerce_to_descriptor_type(
                 self.0.as_ptr(),
                 descriptor_type,
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -795,7 +795,7 @@ fn descriptor_from_bytes(
     let length = i64::try_from(bytes.len())
         .map_err(|_| crate::ScriptingBridgeError::new(function, "buffer length exceeds i64"))?;
     let mut error = std::ptr::null_mut();
-    let raw = create(descriptor_type, bytes.as_ptr(), length, &mut error);
+    let raw = create(descriptor_type, bytes.as_ptr(), length, &raw mut error);
     required_handle(raw, function, error, AppleEventDescriptor::from_raw)
 }
 
@@ -811,7 +811,7 @@ fn descriptor_mutation(
         handle.0.as_ptr(),
         descriptor.0.as_ptr(),
         keyword,
-        &mut error,
+        &raw mut error,
     );
     bool_result(ok, function, error)
 }
@@ -823,7 +823,7 @@ fn descriptor_lookup(
     lookup: impl FnOnce(*mut c_void, AEKeyword, *mut *mut i8) -> *mut c_void,
 ) -> Result<Option<AppleEventDescriptor>> {
     let mut error = std::ptr::null_mut();
-    let raw = lookup(handle.0.as_ptr(), keyword, &mut error);
+    let raw = lookup(handle.0.as_ptr(), keyword, &raw mut error);
     optional_handle(raw, function, error, AppleEventDescriptor::from_raw)
 }
 
@@ -834,6 +834,6 @@ fn descriptor_keyword_bool(
     call: impl FnOnce(*mut c_void, AEKeyword, *mut *mut i8) -> bool,
 ) -> Result<()> {
     let mut error = std::ptr::null_mut();
-    let ok = call(handle.0.as_ptr(), keyword, &mut error);
+    let ok = call(handle.0.as_ptr(), keyword, &raw mut error);
     bool_result(ok, function, error)
 }

@@ -53,7 +53,7 @@ impl ApplicationDelegate {
                 context,
                 application_delegate_trampoline,
                 application_delegate_drop_trampoline,
-                &mut error,
+                &raw mut error,
             )
         };
 

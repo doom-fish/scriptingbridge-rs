@@ -57,7 +57,7 @@ impl ScriptObject {
         // SAFETY: We're calling a C++ bridge function that creates a new SBObject.
         // The returned pointer is either a valid non-null handle or null (on error).
         // We pass a valid error pointer that the bridge will populate on failure.
-        let raw = unsafe { ffi::object::sb_object_create(&mut error) };
+        let raw = unsafe { ffi::object::sb_object_create(&raw mut error) };
         required_handle(raw, "sb_object_create", error, Self)
     }
 
@@ -80,7 +80,7 @@ impl ScriptObject {
                 buffers.name_ptrs.as_ptr(),
                 buffers.values.as_ptr(),
                 count,
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -97,7 +97,7 @@ impl ScriptObject {
         // SAFETY: data.as_ptr() returns a valid non-null pointer to the underlying
         // AppleEventDescriptor handle. The bridge does not take ownership of the
         // descriptor, only reads from it to initialize the new SBObject.
-        let raw = unsafe { ffi::object::sb_object_create_with_data(data.as_ptr(), &mut error) };
+        let raw = unsafe { ffi::object::sb_object_create_with_data(data.as_ptr(), &raw mut error) };
         required_handle(raw, "sb_object_create_with_data", error, Self::from_raw)
     }
 
@@ -122,7 +122,7 @@ impl ScriptObject {
                 buffers.values.as_ptr(),
                 count,
                 data.map_or(std::ptr::null_mut(), AppleEventDescriptor::as_ptr),
-                &mut error,
+                &raw mut error,
             )
         };
         required_handle(
@@ -137,7 +137,7 @@ impl ScriptObject {
     pub fn get(&self) -> Result<Option<AppleEventDescriptor>> {
         let mut error = std::ptr::null_mut();
         // SAFETY: self.0 is a valid non-null pointer to an SBObject from our construction.
-        let raw = unsafe { ffi::object::sb_object_get(self.0.as_ptr(), &mut error) };
+        let raw = unsafe { ffi::object::sb_object_get(self.0.as_ptr(), &raw mut error) };
         optional_handle(raw, "sb_object_get", error, AppleEventDescriptor::from_raw)
     }
 
@@ -166,8 +166,9 @@ impl ScriptObject {
     pub fn property_with_code(&self, code: DescType) -> Result<Option<Self>> {
         let mut error = std::ptr::null_mut();
         // SAFETY: self.0 is a valid non-null SBObject pointer. code is a DescType (u32) value.
-        let raw =
-            unsafe { ffi::object::sb_object_property_with_code(self.0.as_ptr(), code, &mut error) };
+        let raw = unsafe {
+            ffi::object::sb_object_property_with_code(self.0.as_ptr(), code, &raw mut error)
+        };
         optional_handle(raw, "sb_object_property_with_code", error, Self::from_raw)
     }
 
@@ -185,7 +186,7 @@ impl ScriptObject {
                 self.0.as_ptr(),
                 class.as_ptr(),
                 code,
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(raw, "sb_object_property_with_class", error, Self::from_raw)
@@ -196,7 +197,7 @@ impl ScriptObject {
         let mut error = std::ptr::null_mut();
         // SAFETY: self.0 is a valid non-null SBObject pointer.
         let raw = unsafe {
-            ffi::object::sb_object_element_array_with_code(self.0.as_ptr(), code, &mut error)
+            ffi::object::sb_object_element_array_with_code(self.0.as_ptr(), code, &raw mut error)
         };
         optional_handle(
             raw,
@@ -233,7 +234,7 @@ impl ScriptObject {
                 codes.as_ptr(),
                 values.as_ptr(),
                 count,
-                &mut error,
+                &raw mut error,
             )
         };
         optional_handle(
@@ -253,7 +254,7 @@ impl ScriptObject {
             ffi::object::sb_object_set_to(
                 self.0.as_ptr(),
                 value.map_or(std::ptr::null_mut(), AppleEventDescriptor::as_ptr),
-                &mut error,
+                &raw mut error,
             )
         };
         crate::internal::bool_result(ok, "sb_object_set_to", error)
