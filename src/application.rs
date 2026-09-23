@@ -6,7 +6,8 @@ use crate::application_delegate::ApplicationDelegate;
 use crate::element_array::ElementArray;
 use crate::ffi;
 use crate::internal::{bool_result, c_string, optional_handle, required_handle, take_c_string};
-use crate::object::{EventParameter, ScriptObject};
+use crate::object::{check_event_parameters, EventParameter, ScriptObject};
+use crate::selector_policy::{check_command, check_key_path};
 use crate::Result;
 
 /// Mirrors the `NSWorkspaceLaunchOptions` bitfield used by `SBApplication`.
@@ -256,6 +257,15 @@ impl Application {
                 "only zero or one tell() arguments are supported",
             ));
         }
+        match args.first() {
+            None => check_key_path(command, "sb_application_tell")?,
+            Some(argument) => {
+                check_command(command, "sb_application_tell")?;
+                if is_key_value_command(command) {
+                    check_command(argument, "sb_application_tell")?;
+                }
+            }
+        }
 
         let command = c_string(command, "sb_application_tell")?;
         let argument = args
@@ -292,14 +302,9 @@ impl Application {
         event_id: AEEventID,
         parameters: &[EventParameter<'_>],
     ) -> Result<Option<AppleEventDescriptor>> {
+        let count = check_event_parameters(parameters, "sb_application_send_event")?;
         let codes = parameter_codes(parameters);
         let values = parameter_values(parameters);
-        let count = i64::try_from(parameters.len()).map_err(|_| {
-            crate::ScriptingBridgeError::new(
-                "sb_application_send_event",
-                "too many Apple event parameters",
-            )
-        })?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
             ffi::application::sb_application_send_event(
@@ -322,6 +327,7 @@ impl Application {
 
     /// Resolves an `SBObject` key path through this `SBApplication`.
     pub fn object_for_key_path(&self, key_path: &str) -> Result<Option<ScriptObject>> {
+        check_key_path(key_path, "sb_application_object_for_key_path")?;
         let key_path = c_string(key_path, "sb_application_object_for_key_path")?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -341,6 +347,7 @@ impl Application {
 
     /// Resolves an `SBElementArray` key path through this `SBApplication`.
     pub fn element_array_for_key_path(&self, key_path: &str) -> Result<Option<ElementArray>> {
+        check_key_path(key_path, "sb_application_element_array_for_key_path")?;
         let key_path = c_string(key_path, "sb_application_element_array_for_key_path")?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -381,6 +388,10 @@ impl Drop for ScriptingClass {
     fn drop(&mut self) {
         unsafe { ffi::application::sb_scripting_class_release(self.0.as_ptr()) };
     }
+}
+
+pub(crate) fn is_key_value_command(command: &str) -> bool {
+    matches!(command, "valueForKey" | "valueForKeyPath")
 }
 
 fn create_application(

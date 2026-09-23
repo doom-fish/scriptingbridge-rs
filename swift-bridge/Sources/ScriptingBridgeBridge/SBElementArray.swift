@@ -1,5 +1,6 @@
 import Foundation
 import ScriptingBridge
+import ScriptingBridgeObjCBridge
 
 final class SBRSElementArrayHandle: NSObject {
   let array: SBElementArray
@@ -25,8 +26,11 @@ public func sb_element_array_object_with_name(
   }
 
   let handle: SBRSElementArrayHandle = sbBorrow(rawHandle)
-  let object = handle.array.object(withName: String(cString: namePointer))
-  guard let scriptingObject = object as? SBObject else {
+  let name = String(cString: namePointer) as NSString
+  let (succeeded, object) = sbRun(errorOut) {
+    SBRSInvoke(handle.array, "objectWithName:", name, true, .object, &$0, &$1)
+  }
+  guard succeeded, let scriptingObject = object as? SBObject else {
     return nil
   }
 
@@ -49,8 +53,10 @@ public func sb_element_array_object_with_id(
   }
 
   let handle: SBRSElementArrayHandle = sbBorrow(rawHandle)
-  let object = handle.array.object(withID: identifier)
-  guard let scriptingObject = object as? SBObject else {
+  let (succeeded, object) = sbRun(errorOut) {
+    SBRSInvoke(handle.array, "objectWithID:", identifier, true, .object, &$0, &$1)
+  }
+  guard succeeded, let scriptingObject = object as? SBObject else {
     return nil
   }
 
@@ -73,8 +79,10 @@ public func sb_element_array_object_at_location(
   }
 
   let handle: SBRSElementArrayHandle = sbBorrow(rawHandle)
-  let object = handle.array.object(atLocation: location)
-  guard let scriptingObject = object as? SBObject else {
+  let (succeeded, object) = sbRun(errorOut) {
+    SBRSInvoke(handle.array, "objectAtLocation:", location, true, .object, &$0, &$1)
+  }
+  guard succeeded, let scriptingObject = object as? SBObject else {
     return nil
   }
 
@@ -97,8 +105,11 @@ public func sb_element_array_array_by_applying_selector(
   }
 
   let handle: SBRSElementArrayHandle = sbBorrow(rawHandle)
-  let selector = NSSelectorFromString(String(cString: selectorPointer))
-  return sbDescriptorHandle(from: handle.array.array(byApplying: selector))
+  let selectorName = String(cString: selectorPointer)
+  let (succeeded, value) = sbRun(errorOut) {
+    SBRSArrayByApplyingSelector(handle.array, selectorName, nil, false, &$0, &$1)
+  }
+  return succeeded ? sbDescriptorHandle(from: value) : nil
 }
 
 @_cdecl("sb_element_array_array_by_applying_selector_with_object")
@@ -118,9 +129,12 @@ public func sb_element_array_array_by_applying_selector_with_object(
   }
 
   let handle: SBRSElementArrayHandle = sbBorrow(rawHandle)
-  let selector = NSSelectorFromString(String(cString: selectorPointer))
+  let selectorName = String(cString: selectorPointer)
   let argument = sbCocoaValue(fromHandle: argumentHandle) ?? NSNull()
-  return sbDescriptorHandle(from: handle.array.array(byApplying: selector, with: argument))
+  let (succeeded, value) = sbRun(errorOut) {
+    SBRSArrayByApplyingSelector(handle.array, selectorName, argument, true, &$0, &$1)
+  }
+  return succeeded ? sbDescriptorHandle(from: value) : nil
 }
 
 @_cdecl("sb_element_array_get")
@@ -134,7 +148,10 @@ public func sb_element_array_get(
   }
 
   let handle: SBRSElementArrayHandle = sbBorrow(rawHandle)
-  return sbDescriptorHandle(from: handle.array.get())
+  let (succeeded, value) = sbRun(errorOut) {
+    SBRSInvoke(handle.array, "get", nil, false, .object, &$0, &$1)
+  }
+  return succeeded ? sbDescriptorHandle(from: value) : nil
 }
 
 @_cdecl("sb_element_array_description")
@@ -154,7 +171,10 @@ public func sb_element_array_get_description(_ rawHandle: UnsafeMutableRawPointe
   }
 
   let handle: SBRSElementArrayHandle = sbBorrow(rawHandle)
-  guard let value = handle.array.get() else {
+  let (succeeded, value) = sbRun(nil) {
+    SBRSInvoke(handle.array, "get", nil, false, .object, &$0, &$1)
+  }
+  guard succeeded, let value else {
     return nil
   }
 

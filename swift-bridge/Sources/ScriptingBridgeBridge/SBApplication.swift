@@ -2,6 +2,7 @@ import AppKit
 import CoreServices
 import Foundation
 import ScriptingBridge
+import ScriptingBridgeObjCBridge
 
 final class SBRSApplicationHandle: NSObject {
   let application: SBApplication
@@ -39,7 +40,10 @@ private func sbRetainedApplicationHandle(
   url: URL? = nil,
   processIdentifier: pid_t? = nil
 ) -> UnsafeMutableRawPointer {
-  sbRetain(
+  if application.delegate == nil {
+    application.delegate = SBRSDefaultApplicationDelegate.shared
+  }
+  return sbRetain(
     SBRSApplicationHandle(
       application: application,
       bundleIdentifier: bundleIdentifier,
@@ -104,31 +108,6 @@ private func sbSharedApplication(
     bundleIdentifier: bundleIdentifier,
     url: url,
     processIdentifier: processIdentifier)
-}
-
-private func sbPerform(
-  application: SBApplication,
-  command: String,
-  argument: String?,
-  errorOut: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
-) -> Any? {
-  let selectorName = argument == nil ? command : "\(command):"
-  let selector = NSSelectorFromString(selectorName)
-
-  if application.responds(to: selector) {
-    if let argument {
-      return application.perform(selector, with: argument as NSString)?.takeUnretainedValue()
-    }
-
-    return application.perform(selector)?.takeUnretainedValue()
-  }
-
-  if argument == nil {
-    return application.value(forKeyPath: command)
-  }
-
-  sbSetError(errorOut, "application does not respond to selector \(selectorName)")
-  return nil
 }
 
 @_cdecl("sb_application_create_with_bundle_identifier")
@@ -400,8 +379,9 @@ public func sb_application_activate(
   }
 
   let handle: SBRSApplicationHandle = sbBorrow(rawHandle)
-  handle.application.activate()
-  return true
+  return sbRun(errorOut) {
+    SBRSInvoke(handle.application, "activate", nil, false, .void, &$0, &$1)
+  }.succeeded
 }
 
 @_cdecl("sb_application_quit")
@@ -415,8 +395,9 @@ public func sb_application_quit(
   }
 
   let handle: SBRSApplicationHandle = sbBorrow(rawHandle)
-  _ = sbPerform(application: handle.application, command: "quit", argument: nil, errorOut: errorOut)
-  return errorOut?.pointee == nil
+  return sbRun(errorOut) {
+    SBRSInvoke(handle.application, "quit", nil, false, .objectOrVoid, &$0, &$1)
+  }.succeeded
 }
 
 @_cdecl("sb_application_terminate")
@@ -536,7 +517,7 @@ public func sb_application_set_delegate(
     let delegate: SBRSApplicationDelegateHandle = sbBorrow(delegateHandle)
     handle.application.delegate = delegate
   } else {
-    handle.application.delegate = nil
+    handle.application.delegate = SBRSDefaultApplicationDelegate.shared
   }
   return true
 }
@@ -548,7 +529,10 @@ public func sb_application_has_delegate(_ rawHandle: UnsafeMutableRawPointer?) -
   }
 
   let handle: SBRSApplicationHandle = sbBorrow(rawHandle)
-  return handle.application.delegate != nil
+  guard let delegate = handle.application.delegate else {
+    return false
+  }
+  return !(delegate is SBRSDefaultApplicationDelegate)
 }
 
 @_cdecl("sb_application_tell")
@@ -568,13 +552,17 @@ public func sb_application_tell(
   }
 
   let handle: SBRSApplicationHandle = sbBorrow(rawHandle)
-  let result = sbPerform(
-    application: handle.application,
-    command: String(cString: commandPointer),
-    argument: argumentPointer.map { String(cString: $0) },
-    errorOut: errorOut)
+  let command = String(cString: commandPointer)
+  let argument = argumentPointer.map { String(cString: $0) }
+  let (succeeded, result) = sbRun(errorOut) { value, message in
+    if let argument {
+      return SBRSInvoke(
+        handle.application, command + ":", argument as NSString, true, .object, &value, &message)
+    }
+    return SBRSValueForKeyPath(handle.application, command, &value, &message)
+  }
 
-  guard let result else {
+  guard succeeded, let result else {
     return nil
   }
 
@@ -597,7 +585,7 @@ public func sb_application_send_event(
   }
 
   let handle: SBRSApplicationHandle = sbBorrow(rawHandle)
-  let result = sbInvokeSendEvent(
+  let (succeeded, result) = sbInvokeSendEvent(
     on: handle.application,
     eventClass: eventClass,
     eventID: eventID,
@@ -606,7 +594,7 @@ public func sb_application_send_event(
     parameterCount: parameterCount,
     errorOut: errorOut)
 
-  return sbDescriptorHandle(from: result)
+  return succeeded ? sbDescriptorHandle(from: result) : nil
 }
 
 @_cdecl("sb_application_object_for_key_path")
@@ -625,7 +613,11 @@ public func sb_application_object_for_key_path(
   }
 
   let handle: SBRSApplicationHandle = sbBorrow(rawHandle)
-  guard let value = handle.application.value(forKeyPath: String(cString: keyPathPointer)) else {
+  let keyPath = String(cString: keyPathPointer)
+  let (succeeded, result) = sbRun(errorOut) {
+    SBRSValueForKeyPath(handle.application, keyPath, &$0, &$1)
+  }
+  guard succeeded, let value = result else {
     return nil
   }
   guard let object = value as? SBObject else {
@@ -652,7 +644,11 @@ public func sb_application_element_array_for_key_path(
   }
 
   let handle: SBRSApplicationHandle = sbBorrow(rawHandle)
-  guard let value = handle.application.value(forKeyPath: String(cString: keyPathPointer)) else {
+  let keyPath = String(cString: keyPathPointer)
+  let (succeeded, result) = sbRun(errorOut) {
+    SBRSValueForKeyPath(handle.application, keyPath, &$0, &$1)
+  }
+  guard succeeded, let value = result else {
     return nil
   }
   guard let elementArray = value as? SBElementArray else {

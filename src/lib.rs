@@ -24,6 +24,7 @@ mod error;
 mod ffi;
 mod internal;
 mod object;
+mod selector_policy;
 
 /// Re-exports `NSAppleEventDescriptor` helpers and Apple event constants.
 pub use apple_event_descriptor::{

@@ -42,25 +42,67 @@ func sbURL(from rawValue: String) -> URL? {
   return URL(fileURLWithPath: rawValue)
 }
 
-func sbFourCharCode(_ string: String) -> UInt32? {
-  let bytes = Array(string.utf8)
-  guard bytes.count == 4 else {
-    return nil
-  }
+private let sbEventErrorKey = "fish.doom.scriptingbridge.event-error"
+private let sbUserRecordFieldsKeyword: AEKeyword = 0x7573_7266
 
-  return bytes.reduce(0) { partial, byte in
-    (partial << 8) | UInt32(byte)
+func sbRecordEventError(_ error: NSError) {
+  let dictionary = Thread.current.threadDictionary
+  if dictionary[sbEventErrorKey] == nil {
+    dictionary[sbEventErrorKey] = error
   }
 }
 
-func sbFourCharString(_ code: UInt32) -> String {
-  let bytes = [
-    UInt8((code >> 24) & 0xff),
-    UInt8((code >> 16) & 0xff),
-    UInt8((code >> 8) & 0xff),
-    UInt8(code & 0xff),
-  ]
-  return String(bytes: bytes, encoding: .macOSRoman) ?? "????"
+func sbCaptureEventError<T>(_ body: () -> T) -> (T, NSError?) {
+  let dictionary = Thread.current.threadDictionary
+  let outer = dictionary[sbEventErrorKey]
+  dictionary.removeObject(forKey: sbEventErrorKey)
+  let value = body()
+  let error = dictionary[sbEventErrorKey] as? NSError
+  dictionary[sbEventErrorKey] = outer
+  return (value, error)
+}
+
+func sbRun(
+  _ errorOut: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?,
+  _ call: (inout AnyObject?, inout NSString?) -> Bool
+) -> (succeeded: Bool, value: AnyObject?) {
+  autoreleasepool {
+    var value: AnyObject?
+    var message: NSString?
+    let (succeeded, eventError) = sbCaptureEventError { call(&value, &message) }
+    guard succeeded else {
+      sbSetError(errorOut, (message as String?) ?? "the Scripting Bridge call failed")
+      return (false, nil)
+    }
+    if let eventError {
+      sbSetError(errorOut, sbNSErrorMessage(eventError))
+      return (false, nil)
+    }
+    return (true, value)
+  }
+}
+
+func sbDescriptor<T>(_ type: DescType, _ value: T) -> NSAppleEventDescriptor? {
+  withUnsafeBytes(of: value) { bytes in
+    NSAppleEventDescriptor(descriptorType: type, bytes: bytes.baseAddress, length: bytes.count)
+  }
+}
+
+func sbInteger<T: FixedWidthInteger>(_ descriptor: NSAppleEventDescriptor, as type: T.Type) -> T? {
+  let data = descriptor.data
+  guard data.count == MemoryLayout<T>.size else {
+    return nil
+  }
+  return data.withUnsafeBytes { $0.loadUnaligned(as: T.self) }
+}
+
+func sbRecordKeyword(_ key: AnyHashable) -> AEKeyword? {
+  guard let number = key.base as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+    !CFNumberIsFloatType(number as CFNumber)
+  else {
+    return nil
+  }
+  return AEKeyword(exactly: number.int64Value)
 }
 
 func sbCopyDataBuffer(_ data: Data) -> UnsafeMutableRawPointer? {
@@ -134,19 +176,25 @@ func sbDescriptor(from value: Any?) -> NSAppleEventDescriptor? {
     return descriptor
   }
 
-  if let dictionary = value as? [String: Any] {
-    guard dictionary.keys.allSatisfy({ sbFourCharCode($0) != nil }) else {
-      return NSAppleEventDescriptor(string: String(describing: dictionary))
-    }
-
+  if let dictionary = value as? [AnyHashable: Any] {
     let descriptor = NSAppleEventDescriptor(recordDescriptor: ())
-    for key in dictionary.keys.sorted() {
-      guard let keyword = sbFourCharCode(key) else {
-        continue
+    var userFields: [(String, Any)] = []
+    for (key, item) in dictionary {
+      if let keyword = sbRecordKeyword(key) {
+        descriptor.setDescriptor(
+          sbDescriptor(from: item) ?? NSAppleEventDescriptor.null(), forKeyword: keyword)
+      } else {
+        userFields.append((String(describing: key.base), item))
       }
-      descriptor.setDescriptor(
-        sbDescriptor(from: dictionary[key]) ?? NSAppleEventDescriptor.null(),
-        forKeyword: keyword)
+    }
+    if !userFields.isEmpty {
+      let fields = NSAppleEventDescriptor(listDescriptor: ())
+      for (key, item) in userFields.sorted(by: { $0.0 < $1.0 }) {
+        fields.insert(NSAppleEventDescriptor(string: key), at: fields.numberOfItems + 1)
+        fields.insert(
+          sbDescriptor(from: item) ?? NSAppleEventDescriptor.null(), at: fields.numberOfItems + 1)
+      }
+      descriptor.setDescriptor(fields, forKeyword: sbUserRecordFieldsKeyword)
     }
     return descriptor
   }
@@ -156,12 +204,19 @@ func sbDescriptor(from value: Any?) -> NSAppleEventDescriptor? {
       return NSAppleEventDescriptor(boolean: number.boolValue)
     }
 
-    let objcType = String(cString: number.objCType)
-    if objcType == "f" || objcType == "d" {
+    if CFNumberIsFloatType(number as CFNumber) {
       return NSAppleEventDescriptor(double: number.doubleValue)
     }
 
-    return NSAppleEventDescriptor(int32: number.int32Value)
+    if String(cString: number.objCType) == "Q", Int64(exactly: number.uint64Value) == nil {
+      return sbDescriptor(DescType(typeUInt64), number.uint64Value)
+    }
+
+    let integer = number.int64Value
+    if let small = Int32(exactly: integer) {
+      return NSAppleEventDescriptor(int32: small)
+    }
+    return sbDescriptor(DescType(typeSInt64), integer)
   }
 
   if let object = value as? SBObject {
@@ -180,28 +235,29 @@ func sbCocoaValue(from descriptor: NSAppleEventDescriptor?) -> Any? {
     return nil
   }
 
-  if descriptor.descriptorType == DescType(typeNull) {
+  switch descriptor.descriptorType {
+  case DescType(typeNull):
     return nil
-  }
-
-  if descriptor.isRecordDescriptor {
-    var record: [String: Any] = [:]
-    for index in 1...descriptor.numberOfItems {
-      let keyword = descriptor.keywordForDescriptor(at: index)
-      record[sbFourCharString(keyword)] = sbCocoaValue(from: descriptor.atIndex(index)) ?? NSNull()
-    }
-    return record
-  }
-
-  if descriptor.descriptorType == DescType(typeAEList) {
-    return (1...descriptor.numberOfItems).map {
+  case DescType(typeAEList):
+    return stride(from: 1, through: descriptor.numberOfItems, by: 1).map {
       sbCocoaValue(from: descriptor.atIndex($0)) ?? NSNull()
     }
-  }
-
-  switch descriptor.descriptorType {
-  case DescType(typeBoolean):
+  case DescType(typeBoolean), DescType(typeTrue), DescType(typeFalse):
     return NSNumber(value: descriptor.booleanValue)
+  case DescType(typeSInt16), DescType(typeSInt32):
+    return NSNumber(value: descriptor.int32Value)
+  case DescType(typeUInt16), DescType(typeUInt32), DescType(typeSInt64):
+    guard let wide = descriptor.coerce(toDescriptorType: DescType(typeSInt64)),
+      let value = sbInteger(wide, as: Int64.self)
+    else {
+      return descriptor
+    }
+    return Int32(exactly: value).map { NSNumber(value: $0) } ?? descriptor
+  case DescType(typeUInt64):
+    guard let value = sbInteger(descriptor, as: UInt64.self) else {
+      return descriptor
+    }
+    return Int32(exactly: value).map { NSNumber(value: $0) } ?? descriptor
   case DescType(typeIEEE32BitFloatingPoint), DescType(typeIEEE64BitFloatingPoint):
     return NSNumber(value: descriptor.doubleValue)
   case DescType(typeEnumerated):
@@ -211,13 +267,16 @@ func sbCocoaValue(from descriptor: NSAppleEventDescriptor?) -> Any? {
   case DescType(typeFileURL):
     return descriptor.fileURLValue
   default:
+    if descriptor.isRecordDescriptor {
+      return descriptor
+    }
     if let dateValue = descriptor.dateValue {
       return dateValue
     }
     if let stringValue = descriptor.stringValue {
       return stringValue
     }
-    return NSNumber(value: descriptor.int32Value)
+    return descriptor
   }
 }
 

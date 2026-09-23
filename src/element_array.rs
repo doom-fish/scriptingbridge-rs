@@ -5,6 +5,7 @@ use crate::apple_event_descriptor::AppleEventDescriptor;
 use crate::ffi;
 use crate::internal::{c_string, optional_handle, take_optional_c_string};
 use crate::object::ScriptObject;
+use crate::selector_policy::{check_command, check_selector};
 use crate::Result;
 
 /// Wraps an `SBElementArray` instance.
@@ -78,6 +79,7 @@ impl ElementArray {
         &self,
         selector: &str,
     ) -> Result<Option<AppleEventDescriptor>> {
+        check_selector(selector, 0, "sb_element_array_array_by_applying_selector")?;
         let selector = c_string(selector, "sb_element_array_array_by_applying_selector")?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -101,6 +103,18 @@ impl ElementArray {
         selector: &str,
         argument: &AppleEventDescriptor,
     ) -> Result<Option<AppleEventDescriptor>> {
+        check_selector(
+            selector,
+            1,
+            "sb_element_array_array_by_applying_selector_with_object",
+        )?;
+        if crate::application::is_key_value_command(selector.trim_end_matches(':')) {
+            let key = argument.string_value().unwrap_or_default();
+            check_command(
+                &key,
+                "sb_element_array_array_by_applying_selector_with_object",
+            )?;
+        }
         let selector = c_string(
             selector,
             "sb_element_array_array_by_applying_selector_with_object",

@@ -13,6 +13,15 @@ public typealias SBRSApplicationDelegateCallback = @convention(c) (
 
 public typealias SBRSApplicationDelegateContextHook = @convention(c) (UnsafeMutableRawPointer?) -> Void
 
+final class SBRSDefaultApplicationDelegate: NSObject, SBApplicationDelegate {
+  static let shared = SBRSDefaultApplicationDelegate()
+
+  func eventDidFail(_ event: UnsafePointer<AppleEvent>, withError error: Error) -> Any? {
+    sbRecordEventError(error as NSError)
+    return nil
+  }
+}
+
 final class SBRSApplicationDelegateHandle: NSObject, SBApplicationDelegate {
   let context: UnsafeMutableRawPointer?
   let callback: SBRSApplicationDelegateCallback
@@ -52,6 +61,7 @@ final class SBRSApplicationDelegateHandle: NSObject, SBApplicationDelegate {
     }
 
     guard let rawResult else {
+      sbRecordEventError(error)
       return nil
     }
 

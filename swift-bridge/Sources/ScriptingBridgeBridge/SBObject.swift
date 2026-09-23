@@ -1,5 +1,6 @@
 import Foundation
 import ScriptingBridge
+import ScriptingBridgeObjCBridge
 
 final class SBRSObjectHandle: NSObject {
   let object: SBObject
@@ -14,7 +15,7 @@ private func sbSendEventValues(
   parameterValues: UnsafePointer<UnsafeMutableRawPointer?>?,
   parameterCount: Int64,
   errorOut: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
-) -> (codes: [UInt32], values: [Any?])? {
+) -> (codes: [NSNumber], values: [NSAppleEventDescriptor])? {
   guard parameterCount >= 0 else {
     sbSetError(errorOut, "parameter count cannot be negative")
     return nil
@@ -38,8 +39,8 @@ private func sbSendEventValues(
   let codeBuffer = UnsafeBufferPointer(start: parameterCodes, count: parameterCount)
   let valueBuffer = UnsafeBufferPointer(start: parameterValues, count: parameterCount)
   return (
-    Array(codeBuffer),
-    valueBuffer.map { sbCocoaValue(fromHandle: $0) })
+    codeBuffer.map { NSNumber(value: $0) },
+    valueBuffer.map { sbDescriptor(fromHandle: $0) ?? NSAppleEventDescriptor.null() })
 }
 
 func sbInvokeSendEvent(
@@ -50,166 +51,18 @@ func sbInvokeSendEvent(
   parameterValues: UnsafePointer<UnsafeMutableRawPointer?>?,
   parameterCount: Int64,
   errorOut: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
-) -> Any? {
+) -> (succeeded: Bool, value: AnyObject?) {
   guard let parameters = sbSendEventValues(
     parameterCodes: parameterCodes,
     parameterValues: parameterValues,
     parameterCount: parameterCount,
     errorOut: errorOut)
   else {
-    return nil
+    return (false, nil)
   }
 
-  let selector = NSSelectorFromString("sendEvent:id:parameters:")
-  let imp = object.method(for: selector)
-  let codes = parameters.codes
-  let values = parameters.values
-
-  switch parameters.codes.count {
-  case 0:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(object, selector, eventClass, eventID, 0)
-  case 1:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32, AnyObject?, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(object, selector, eventClass, eventID, codes[0], values[0] as AnyObject?, 0)
-  case 2:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32, AnyObject?, UInt32, AnyObject?, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(
-      object,
-      selector,
-      eventClass,
-      eventID,
-      codes[0],
-      values[0] as AnyObject?,
-      codes[1],
-      values[1] as AnyObject?,
-      0)
-  case 3:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(
-      object,
-      selector,
-      eventClass,
-      eventID,
-      codes[0],
-      values[0] as AnyObject?,
-      codes[1],
-      values[1] as AnyObject?,
-      codes[2],
-      values[2] as AnyObject?,
-      0)
-  case 4:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(
-      object,
-      selector,
-      eventClass,
-      eventID,
-      codes[0],
-      values[0] as AnyObject?,
-      codes[1],
-      values[1] as AnyObject?,
-      codes[2],
-      values[2] as AnyObject?,
-      codes[3],
-      values[3] as AnyObject?,
-      0)
-  case 5:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(
-      object,
-      selector,
-      eventClass,
-      eventID,
-      codes[0],
-      values[0] as AnyObject?,
-      codes[1],
-      values[1] as AnyObject?,
-      codes[2],
-      values[2] as AnyObject?,
-      codes[3],
-      values[3] as AnyObject?,
-      codes[4],
-      values[4] as AnyObject?,
-      0)
-  case 6:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(
-      object,
-      selector,
-      eventClass,
-      eventID,
-      codes[0],
-      values[0] as AnyObject?,
-      codes[1],
-      values[1] as AnyObject?,
-      codes[2],
-      values[2] as AnyObject?,
-      codes[3],
-      values[3] as AnyObject?,
-      codes[4],
-      values[4] as AnyObject?,
-      codes[5],
-      values[5] as AnyObject?,
-      0)
-  case 7:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(
-      object,
-      selector,
-      eventClass,
-      eventID,
-      codes[0],
-      values[0] as AnyObject?,
-      codes[1],
-      values[1] as AnyObject?,
-      codes[2],
-      values[2] as AnyObject?,
-      codes[3],
-      values[3] as AnyObject?,
-      codes[4],
-      values[4] as AnyObject?,
-      codes[5],
-      values[5] as AnyObject?,
-      codes[6],
-      values[6] as AnyObject?,
-      0)
-  case 8:
-    typealias SendEvent = @convention(c) (AnyObject, Selector, UInt32, UInt32, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32, AnyObject?, UInt32) -> AnyObject?
-    let function = unsafeBitCast(imp, to: SendEvent.self)
-    return function(
-      object,
-      selector,
-      eventClass,
-      eventID,
-      codes[0],
-      values[0] as AnyObject?,
-      codes[1],
-      values[1] as AnyObject?,
-      codes[2],
-      values[2] as AnyObject?,
-      codes[3],
-      values[3] as AnyObject?,
-      codes[4],
-      values[4] as AnyObject?,
-      codes[5],
-      values[5] as AnyObject?,
-      codes[6],
-      values[6] as AnyObject?,
-      codes[7],
-      values[7] as AnyObject?,
-      0)
-  default:
-    sbSetError(errorOut, "unreachable Apple event parameter arity")
-    return nil
+  return sbRun(errorOut) {
+    SBRSSendEvent(object, eventClass, eventID, parameters.codes, parameters.values, &$0, &$1)
   }
 }
 
@@ -280,7 +133,10 @@ public func sb_object_get(
   }
 
   let handle: SBRSObjectHandle = sbBorrow(rawHandle)
-  return sbDescriptorHandle(from: handle.object.get())
+  let (succeeded, value) = sbRun(errorOut) {
+    SBRSInvoke(handle.object, "get", nil, false, .object, &$0, &$1)
+  }
+  return succeeded ? sbDescriptorHandle(from: value) : nil
 }
 
 @_cdecl("sb_object_description")
@@ -300,7 +156,10 @@ public func sb_object_get_description(_ rawHandle: UnsafeMutableRawPointer?) -> 
   }
 
   let handle: SBRSObjectHandle = sbBorrow(rawHandle)
-  guard let value = handle.object.get() else {
+  let (succeeded, value) = sbRun(nil) {
+    SBRSInvoke(handle.object, "get", nil, false, .object, &$0, &$1)
+  }
+  guard succeeded, let value else {
     return nil
   }
 
@@ -333,7 +192,11 @@ public func sb_object_property_with_code(
   }
 
   let handle: SBRSObjectHandle = sbBorrow(rawHandle)
-  return sbRetain(SBRSObjectHandle(object: handle.object.property(withCode: code)))
+  let (succeeded, value) = sbRun(errorOut) { SBRSPropertyWithCode(handle.object, code, &$0, &$1) }
+  guard succeeded, let property = value as? SBObject else {
+    return nil
+  }
+  return sbRetain(SBRSObjectHandle(object: property))
 }
 
 @_cdecl("sb_object_property_with_class")
@@ -354,9 +217,13 @@ public func sb_object_property_with_class(
 
   let handle: SBRSObjectHandle = sbBorrow(rawHandle)
   let scriptingClass: SBRSScriptingClassHandle = sbBorrow(classHandle)
-  return sbRetain(
-    SBRSObjectHandle(
-      object: handle.object.property(with: scriptingClass.scriptingClass, code: code)))
+  let (succeeded, value) = sbRun(errorOut) {
+    SBRSPropertyWithClassAndCode(handle.object, scriptingClass.scriptingClass, code, &$0, &$1)
+  }
+  guard succeeded, let property = value as? SBObject else {
+    return nil
+  }
+  return sbRetain(SBRSObjectHandle(object: property))
 }
 
 @_cdecl("sb_object_element_array_with_code")
@@ -371,7 +238,11 @@ public func sb_object_element_array_with_code(
   }
 
   let handle: SBRSObjectHandle = sbBorrow(rawHandle)
-  return sbRetain(SBRSElementArrayHandle(array: handle.object.elementArray(withCode: code)))
+  let (succeeded, value) = sbRun(errorOut) { SBRSElementArrayWithCode(handle.object, code, &$0, &$1) }
+  guard succeeded, let array = value as? SBElementArray else {
+    return nil
+  }
+  return sbRetain(SBRSElementArrayHandle(array: array))
 }
 
 @_cdecl("sb_object_send_event")
@@ -390,7 +261,7 @@ public func sb_object_send_event(
   }
 
   let handle: SBRSObjectHandle = sbBorrow(rawHandle)
-  let result = sbInvokeSendEvent(
+  let (succeeded, result) = sbInvokeSendEvent(
     on: handle.object,
     eventClass: eventClass,
     eventID: eventID,
@@ -399,7 +270,7 @@ public func sb_object_send_event(
     parameterCount: parameterCount,
     errorOut: errorOut)
 
-  return sbDescriptorHandle(from: result)
+  return succeeded ? sbDescriptorHandle(from: result) : nil
 }
 
 @_cdecl("sb_object_set_to")
@@ -414,8 +285,10 @@ public func sb_object_set_to(
   }
 
   let handle: SBRSObjectHandle = sbBorrow(rawHandle)
-  handle.object.setTo(sbCocoaValue(fromHandle: valueHandle))
-  return true
+  let value = sbCocoaValue(fromHandle: valueHandle)
+  return sbRun(errorOut) {
+    SBRSInvoke(handle.object, "setTo:", value, true, .void, &$0, &$1)
+  }.succeeded
 }
 
 @_cdecl("sb_object_release")

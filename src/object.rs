@@ -214,14 +214,9 @@ impl ScriptObject {
         event_id: AEEventID,
         parameters: &[EventParameter<'_>],
     ) -> Result<Option<AppleEventDescriptor>> {
+        let count = check_event_parameters(parameters, "sb_object_send_event")?;
         let codes = parameter_codes(parameters);
         let values = parameter_values(parameters);
-        let count = i64::try_from(parameters.len()).map_err(|_| {
-            crate::ScriptingBridgeError::new(
-                "sb_object_send_event",
-                "too many Apple event parameters",
-            )
-        })?;
         let mut error = std::ptr::null_mut();
         // SAFETY: self.0 is a valid non-null SBObject pointer. codes and values are valid
         // arrays constructed from parameters, and count matches the actual array lengths.
@@ -293,6 +288,28 @@ fn property_buffers(
         values,
     })
 }
+
+pub(crate) fn check_event_parameters(
+    parameters: &[EventParameter<'_>],
+    function: &'static str,
+) -> Result<i64> {
+    if parameters.len() > MAX_EVENT_PARAMETERS {
+        return Err(crate::ScriptingBridgeError::new(
+            function,
+            format!("sendEvent takes at most {MAX_EVENT_PARAMETERS} parameters"),
+        ));
+    }
+    if parameters.iter().any(|parameter| parameter.code == 0) {
+        return Err(crate::ScriptingBridgeError::new(
+            function,
+            "an Apple event parameter code of 0 would end the parameter list",
+        ));
+    }
+    i64::try_from(parameters.len())
+        .map_err(|_| crate::ScriptingBridgeError::new(function, "too many Apple event parameters"))
+}
+
+const MAX_EVENT_PARAMETERS: usize = 8;
 
 fn parameter_codes(parameters: &[EventParameter<'_>]) -> Vec<u32> {
     parameters.iter().map(|parameter| parameter.code).collect()
