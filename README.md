@@ -66,9 +66,11 @@ prompting (`Granted`, `Denied`, `RequiresConsent` or `TargetNotRunning`); pass
 
 ## Threading
 
-Apple documents `NSAppleScript` as main-thread only, so create, compile and run
-`AppleScript` values on the main thread. The crate does not enforce this. None
-of the handle types are `Send`, so each stays on the thread that created it.
+Apple documents `NSAppleScript` as main-thread only. `AppleScript::with_source`
+and `AppleScript::with_contents_of_url` return an error on any other thread, and
+an `AppleScript` is neither `Send` nor `Sync`, so it is also compiled, run and
+dropped on the main thread. None of the handle types are `Send`, so each stays
+on the thread that created it.
 
 ## Untrusted strings
 

@@ -131,10 +131,10 @@ the notes list where it deliberately differs.
 | `NSAppleScriptErrorAppName` | ✅ implemented | `APPLE_SCRIPT_ERROR_APP_NAME_KEY` |
 | `NSAppleScriptErrorBriefMessage` | ✅ implemented | `APPLE_SCRIPT_ERROR_BRIEF_MESSAGE_KEY` |
 | `NSAppleScriptErrorRange` | ✅ implemented | `APPLE_SCRIPT_ERROR_RANGE_KEY` |
-| `initWithContentsOfURL:error:` | ✅ implemented | `AppleScript::with_contents_of_url` |
-| `initWithSource:` | ✅ implemented | `AppleScript::with_source` |
+| `initWithContentsOfURL:error:` | ✅ implemented | `AppleScript::with_contents_of_url`; returns an error off the main thread |
+| `initWithSource:` | ✅ implemented | `AppleScript::with_source`; returns an error off the main thread |
 | `source` | ✅ implemented | `AppleScript::source` |
 | `compiled` | ✅ implemented | `AppleScript::is_compiled` |
 | `compileAndReturnError:` | ✅ implemented | `AppleScript::compile` |
-| `executeAndReturnError:` | ✅ implemented | `AppleScript::execute`; Apple documents `NSAppleScript` as main-thread only, which the crate does not enforce |
+| `executeAndReturnError:` | ✅ implemented | `AppleScript::execute`; Apple documents `NSAppleScript` as main-thread only, and an `AppleScript` can only be created there and is neither `Send` nor `Sync` |
 | `executeAppleEvent:error:` | ✅ implemented | `AppleScript::execute_apple_event` |

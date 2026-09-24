@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking:** failed Apple events return `Err` instead of `Ok(None)`. A delegate installed with `set_delegate` still sees the failure first and can return a replacement value; returning `None` keeps the error.
 - **Breaking:** `has_delegate()` is `false` while only the default delegate is installed, and `set_delegate(None)` restores the default delegate.
 - **Breaking:** `send_event` rejects a parameter code of 0, which would end the variadic list; more than 8 parameters remains an error.
+- **Breaking:** `AppleScript::with_source` and `AppleScript::with_contents_of_url` return an error off the main thread, where Apple documents `NSAppleScript` as main-thread only. `AppleScript` is neither `Send` nor `Sync`, so its other methods and its drop run on the main thread too. The `NSAppleScript` tests moved to a `harness = false` test target that runs on the main thread.
 - The tests that send Apple Events to Finder are `#[ignore]`d. They no longer activate Finder, and when run with `--ignored` they skip without Automation permission.
 - `rust-version` is 1.82; `apple-cf` is required at `>=0.11, <0.12` and `doom-fish-utils` at `>=0.4.1, <0.5`.
 
