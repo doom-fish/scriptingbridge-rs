@@ -55,6 +55,10 @@ maintenance = { status = "actively-developed" }
 [[example]]
 name = "01_finder_handle"
 
+[[test]]
+name = "main_thread"
+harness = false
+
 [profile.release]
 debug = "full"
 strip = "none"

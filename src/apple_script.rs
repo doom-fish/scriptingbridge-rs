@@ -6,7 +6,7 @@ use crate::ffi;
 use crate::internal::{
     bool_result, c_string, optional_handle, required_handle, take_optional_c_string,
 };
-use crate::Result;
+use crate::{Result, ScriptingBridgeError};
 
 /// Matches the `NSAppleScriptErrorMessage` key in `NSAppleScript` error dictionaries.
 pub const APPLE_SCRIPT_ERROR_MESSAGE_KEY: &str = "NSAppleScriptErrorMessage";
@@ -26,6 +26,7 @@ pub struct AppleScript(NonNull<c_void>);
 impl AppleScript {
     /// Creates an `NSAppleScript` from source text.
     pub fn with_source(source: &str) -> Result<Self> {
+        require_main_thread("sb_apple_script_create_with_source")?;
         let source = c_string(source, "sb_apple_script_create_with_source")?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -41,6 +42,7 @@ impl AppleScript {
 
     /// Loads an `NSAppleScript` from a file path or URL.
     pub fn with_contents_of_url(path_or_url: &str) -> Result<Self> {
+        require_main_thread("sb_apple_script_create_with_contents_of_url")?;
         let path_or_url = c_string(path_or_url, "sb_apple_script_create_with_contents_of_url")?;
         let mut error = std::ptr::null_mut();
         let raw = unsafe {
@@ -112,6 +114,17 @@ impl AppleScript {
 
     fn from_raw(handle: NonNull<c_void>) -> Self {
         Self(handle)
+    }
+}
+
+fn require_main_thread(function: &'static str) -> Result<()> {
+    if unsafe { ffi::pthread_main_np() } != 0 {
+        Ok(())
+    } else {
+        Err(ScriptingBridgeError::new(
+            function,
+            "NSAppleScript can only be used on the main thread",
+        ))
     }
 }
 
